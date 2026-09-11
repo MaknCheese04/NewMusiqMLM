@@ -10,3 +10,5 @@ Basic functionality:
 - Album covers
 - Artist pages
 - Song genres
+- contact us
+- interactive ai for questions
