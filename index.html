@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soundwave — Your music, your way</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#"><span class="brand-mark">◒</span><span>soundwave</span></a>
+        <nav class="main-nav" aria-label="Main navigation">
+          <button class="nav-item active" data-page="home"><span>⌂</span> Home</button>
+          <button class="nav-item" data-page="search"><span>⌕</span> Search</button>
+          <button class="nav-item" data-page="library"><span>▤</span> Your Library</button>
+        </nav>
+        <div class="divider"></div>
+        <div class="nav-label">YOUR COLLECTION</div>
+        <button class="nav-item"><span class="plus">+</span> Create playlist</button>
+        <button class="nav-item"><span class="heart">♥</span> Liked songs</button>
+        <div class="playlist-list">
+          <button>Night drives</button><button>feel good friday</button><button>Focus flow</button><button>New discoveries</button><button>Cooking pasta</button>
+        </div>
+        <div class="sidebar-bottom"><button>⌄ Install app</button><div class="profile"><div class="avatar">AR</div><span>Alex Rivera</span><span class="chevron">⌄</span></div></div>
+      </aside>
+
+      <main class="content">
+        <header><div class="history"><button aria-label="Back">‹</button><button aria-label="Forward">›</button></div><div class="header-actions"><button class="upgrade">Explore Premium</button><button class="bell">♧</button></div></header>
+        <section class="hero"><div class="hero-copy"><p class="eyebrow">GOOD AFTERNOON</p><h1>Find your next<br /><em>favorite sound.</em></h1><p class="subhead">Music that moves with your moment.</p><button class="play-hero" id="heroPlay"><span>▶</span> Play something</button></div><div class="hero-art"><div class="orb orb-one"></div><div class="orb orb-two"></div><div class="orb orb-three"></div><div class="vinyl"><div class="vinyl-label">SW</div></div><div class="spark s1">✦</div><div class="spark s2">✦</div></div></section>
+        <section class="quick-section"><h2>Jump back in</h2><div class="quick-grid" id="quickGrid"></div></section>
+        <section class="section-header"><div><h2>Made for you</h2><p>Fresh picks based on your listening.</p></div><button class="show-all">Show all</button></section><section class="cards" id="madeForYou"></section>
+        <section class="section-header recently"><div><h2>Recently played</h2><p>Rediscover what you loved.</p></div><button class="show-all">Show all</button></section><section class="cards" id="recent"></section>
+      </main>
+    </div>
+    <footer class="player"><div class="now-playing"><div id="albumThumb" class="album-thumb gradient-1"></div><div><strong id="trackTitle">Velvet Skies</strong><small id="trackArtist">Luna Vale</small></div><button id="likeButton" aria-label="Like song">♡</button></div><div class="playback"><div class="controls"><button id="shuffle">↝</button><button id="previous">|◀</button><button class="main-play" id="playButton" aria-label="Play">▶</button><button id="next">▶|</button><button id="repeat">↻</button></div><div class="timeline"><span id="elapsed">0:00</span><input id="progress" aria-label="Song progress" type="range" min="0" max="224" value="0" /><span id="duration">3:44</span></div></div><div class="player-options"><button>▤</button><button>▱</button><button>⌁</button><span>◖</span><input id="volume" aria-label="Volume" type="range" min="0" max="100" value="70" /></div></footer>
+    <script src="app.js"></script>
+  </body>
+</html>
