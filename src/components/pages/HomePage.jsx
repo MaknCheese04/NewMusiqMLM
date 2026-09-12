@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAudio } from '../../context/AudioContext';
-import { Play, Pause, Loader2, Star } from 'lucide-react';
+import { Play, Pause, Loader2, Star, CircleOff } from 'lucide-react';
 import { getArtistColors, getArtistProfile } from '../../data/artistProfiles';
 
 const quick = [
@@ -44,7 +44,7 @@ export function HomePage({ onArtistSelect }) {
             Find your next<br />
             <em>favorite sound.</em>
           </h1>
-          <p className="subhead">Music that moves with your moment.</p>
+        <p className="subhead">New music everyday.</p>
           <button className="btn-play-hero" onClick={togglePlay} disabled={isRetrieving}>
             {isRetrieving ? (
               <>
@@ -161,7 +161,7 @@ export function HomePage({ onArtistSelect }) {
                 <div className="album-rating-controls" aria-label={`Rate ${album.name} from 0 to 5 stars`}>
                   <button type="button" className={yourRating === 0 ? 'selected' : ''}
                     onClick={() => rateAlbum(album, 0)} disabled={Boolean(albumRatingSaving)}
-                    aria-label={`Rate ${album.name} 0 out of 5 stars`} aria-pressed={yourRating === 0}>0</button>
+                    aria-label={`Rate ${album.name} 0 out of 5 stars`} aria-pressed={yourRating === 0}><CircleOff size={17} /></button>
                   {[1, 2, 3, 4, 5].map(stars => (
                     <button type="button" key={stars} onClick={() => rateAlbum(album, stars)}
                       disabled={Boolean(albumRatingSaving)} aria-label={`Rate ${album.name} ${stars} out of 5 stars`}
@@ -179,8 +179,8 @@ export function HomePage({ onArtistSelect }) {
                   {yourRating !== null && (
                     <span className={`album-rating-popover ${revealedAlbumKey === albumKey ? 'revealed' : ''}`}>
                       {isSaving ? 'Saving rating…' : totals?.rating_count
-                        ? `Average rating: ${(totals.rating_sum / totals.rating_count).toFixed(1)}/5`
-                        : 'Loading average…'}
+                        ? `${yourRating}/5 · Listener average ${(totals.rating_sum / totals.rating_count).toFixed(1)}/5`
+                        : `${yourRating}/5 · Loading average…`}
                     </span>
                   )}
                 </div>

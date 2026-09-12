@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AudioProvider } from './context/AudioContext';
 import { AuthScreen } from './components/AuthScreen';
@@ -13,8 +13,9 @@ import { ArtistPage } from './components/pages/ArtistPage';
 import { ArtistStudioModal } from './components/modals/ArtistStudioModal';
 import { EditProfileModal } from './components/modals/EditProfileModal';
 import './styles/index.css';
+import { safeStorage } from './lib/safeStorage';
 
-function MainApp() {
+function MainApp({ theme, setTheme }) {
   const { session, loading } = useAuth();
   const [activePage, setActivePage] = useState('home');
   const [selectedArtist, setSelectedArtist] = useState(null);
@@ -56,7 +57,7 @@ function MainApp() {
         {activePage === 'home' && <HomePage onArtistSelect={openArtist} />}
         {activePage === 'search' && <SearchPage onClose={() => setActivePage('home')} onArtistSelect={openArtist} />}
         {activePage === 'profile' && <ProfilePage onEditProfile={() => setIsEditProfileOpen(true)} onArtistSelect={openArtist} />}
-        {activePage === 'settings' && <SettingsPage />}
+        {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} />}
         {activePage === 'artist' && selectedArtist && <ArtistPage artistName={selectedArtist} onBack={() => setActivePage(previousPage)} />}
       </main>
 
@@ -74,10 +75,17 @@ function MainApp() {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState(() => safeStorage.getItem('soundwave-theme') === 'dark' ? 'dark' : 'light');
+
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    safeStorage.setItem('soundwave-theme', theme);
+  }, [theme]);
+
   return (
     <AuthProvider>
       <AudioProvider>
-        <MainApp />
+        <MainApp theme={theme} setTheme={setTheme} />
       </AudioProvider>
     </AuthProvider>
   );

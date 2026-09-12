@@ -1,23 +1,24 @@
-/* Soundwave React - Core Styling & Design System */
+/* NewMusiq React - Core Styling & Design System */
 
 :root {
   --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Outfit', 'DM Sans', sans-serif;
 
-  --bg-app: #fbfafc;
+  --bg-app: #f8fbff;
   --bg-sidebar: #ffffff;
   --bg-card: #ffffff;
-  --bg-surface-hover: #f4f2ff;
+  --bg-surface-hover: #eaf3ff;
   --bg-dialog: #ffffff;
   
-  --color-primary: #6856ed;
-  --color-primary-hover: #5744e3;
-  --color-primary-light: #eeecff;
+  --color-primary: #245fa7;
+  --color-primary-hover: #174d90;
+  --color-primary-light: #e5f1ff;
   --color-text: #16172a;
   --color-text-muted: #77798b;
   --color-text-subtle: #414251;
-  --color-border: #eceaf1;
-  --color-border-strong: #dedce6;
+  --color-border: #dfcfa9;
+  --color-border-strong: #c3a568;
+  --color-gold: #b88d43;
 
   --accent-heart: #e5484d;
   --shadow-sm: 0 4px 12px rgba(41, 37, 64, 0.04);
@@ -40,6 +41,10 @@
 body {
   font-family: var(--font-primary);
   background-color: var(--bg-app);
+  background-image: url('../assets/waves-light.svg');
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
   color: var(--color-text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -1164,13 +1169,19 @@ input, textarea, select {
 }
 
 .song-rating { display: flex; align-items: center; gap: 8px; position: relative; }
-.song-rating-label { font-size: 11px; white-space: nowrap; }
+.song-rating-label { position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 3; padding: 5px 8px; border-radius: 6px; background: var(--color-text); color: var(--bg-card); font-size: 11px; font-weight: 700; white-space: nowrap; opacity: 0; visibility: hidden; pointer-events: none; }
+@media (hover: hover) { .song-rating:hover .song-rating-label { opacity: 1; visibility: visible; } }
+.song-rating:focus-within .song-rating-label { opacity: 1; visibility: visible; }
 .song-rating-buttons { display: flex; align-items: center; gap: 1px; }
 .song-rating-buttons button { color: var(--color-text-muted); padding: 2px; display: grid; place-items: center; }
 .song-rating-buttons button:hover, .song-rating-buttons button[aria-pressed="true"],
 .song-rating-buttons button:has(svg[fill="currentColor"]) { color: #e5a33c; }
 .song-rating-buttons button:disabled { cursor: wait; }
-.song-rating-buttons .rating-zero { font-size: 11px; font-weight: 800; width: 18px; height: 22px; }
+.song-rating-buttons .rating-zero { width: 20px; height: 22px; }
+.artist-rating-reveal { display: inline-flex; align-items: center; gap: 4px; cursor: help; }
+.artist-rating-reveal span, .artist-rating-value { opacity: 0; visibility: hidden; }
+.artist-rating-reveal:hover span, .artist-rating-reveal:focus span,
+.artist-album:hover .artist-rating-value, .artist-album:focus-visible .artist-rating-value, .artist-album.selected .artist-rating-value { opacity: 1; visibility: visible; }
 .song-rating-buttons .rating-zero.selected { color: var(--color-primary); }
 .song-rating-error { position: absolute; right: 0; bottom: 100%; width: 230px; color: #b63e4b; font-size: 11px; text-align: right; }
 .volume-control { display: flex; align-items: center; gap: 10px; }
@@ -1252,7 +1263,6 @@ input, textarea, select {
 
 /* Responsive adjustments */
 @media (max-width: 900px) {
-  .song-rating-label { display: none; }
   :root {
     --sidebar-width: 76px;
   }
@@ -1294,3 +1304,161 @@ input, textarea, select {
     margin-bottom: 48px;
   }
 }
+
+/* Wave appearance themes */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-app: #05080d;
+  --bg-sidebar: #0a0e14;
+  --bg-card: #111821;
+  --bg-surface-hover: #1b2734;
+  --bg-dialog: #141b25;
+  --color-primary: #d7ab56;
+  --color-primary-hover: #ebc677;
+  --color-primary-light: #332916;
+  --color-text: #f5f0e8;
+  --color-text-muted: #b5b9c2;
+  --color-text-subtle: #ddd8ca;
+  --color-border: #8f713c;
+  --color-border-strong: #c49a50;
+  --color-gold: #d7ab56;
+}
+
+:root[data-theme="dark"] body { background-image: url('../assets/waves-dark.svg'); }
+:root[data-theme="dark"] .auth-screen { background: var(--bg-app) url('../assets/waves-dark.svg') center / cover fixed; }
+:root[data-theme="light"] .auth-screen { background: var(--bg-app) url('../assets/waves-light.svg') center / cover fixed; }
+:root[data-theme="dark"] .main-header { background: rgba(8, 12, 19, .91); }
+:root[data-theme="light"] .main-header { background: rgba(248, 251, 255, .9); }
+:root[data-theme="light"] .settings-card,
+:root[data-theme="light"] .profile-hero,
+:root[data-theme="light"] .artist-card,
+:root[data-theme="light"] .home-artist-card,
+:root[data-theme="light"] .music-search,
+:root[data-theme="light"] .search-result { background-color: #fff !important; border-color: var(--color-border) !important; }
+:root[data-theme="light"] .sidebar,
+:root[data-theme="light"] .player-bar { border-color: var(--color-gold); }
+:root[data-theme="dark"] .sidebar,
+:root[data-theme="dark"] .player-bar,
+:root[data-theme="dark"] .settings-card,
+:root[data-theme="dark"] .profile-hero,
+:root[data-theme="dark"] .artist-card,
+:root[data-theme="dark"] .home-artist-card,
+:root[data-theme="dark"] .artist-feature-copy,
+:root[data-theme="dark"] .artist-album-detail,
+:root[data-theme="dark"] .search-result,
+:root[data-theme="dark"] .music-search,
+:root[data-theme="dark"] .history-nav button,
+:root[data-theme="dark"] .form-group input,
+:root[data-theme="dark"] .form-group textarea,
+:root[data-theme="dark"] .form-group select,
+:root[data-theme="dark"] .auth-form input,
+:root[data-theme="dark"] .setting-row button { background: var(--bg-card) !important; color: var(--color-text); border-color: var(--color-border); }
+:root[data-theme="dark"] .sidebar,
+:root[data-theme="dark"] .player-bar { border-color: var(--color-gold); }
+:root[data-theme="dark"] .playlist-list button:hover { background: var(--bg-surface-hover); }
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .quick-card,
+:root[data-theme="dark"] .modal-card { background: var(--bg-card); color: var(--color-text); border-color: var(--color-border); }
+:root[data-theme="dark"] .artist-page { color: var(--color-text); }
+:root[data-theme="dark"] .artist-album:hover,
+:root[data-theme="dark"] .artist-album.selected { background: var(--bg-card); }
+:root[data-theme="dark"] .artist-song-play,
+:root[data-theme="dark"] .artist-album-tracks button,
+:root[data-theme="dark"] .genre-chips span { background: var(--bg-surface-hover); color: var(--color-primary); }
+:root[data-theme="dark"] .auth-copy h1,
+:root[data-theme="dark"] .auth-copy h2,
+:root[data-theme="dark"] .settings-card h1,
+:root[data-theme="dark"] .section-header h2,
+:root[data-theme="dark"] .profile-intro h1 { color: var(--color-text); }
+:root[data-theme="dark"] .settings-subtitle,
+:root[data-theme="dark"] .setting-row p,
+:root[data-theme="dark"] .settings-danger p,
+:root[data-theme="dark"] .card p,
+:root[data-theme="dark"] .artist-card p { color: var(--color-text-muted); }
+:root[data-theme="dark"] .btn-play-hero,
+:root[data-theme="dark"] .card-play-btn,
+:root[data-theme="dark"] .btn-main-play { background: var(--color-primary); color: #14100a !important; }
+:root[data-theme="dark"] .btn-play-hero svg,
+:root[data-theme="dark"] .card-play-btn svg,
+:root[data-theme="dark"] .btn-main-play svg { color: #14100a !important; fill: #14100a !important; }
+:root[data-theme="dark"] .btn-main-play:hover { background: var(--color-primary-hover); }
+:root[data-theme="dark"] .hero { background: linear-gradient(125deg, rgba(4,6,9,.82), rgba(21,30,41,.8)), url('../assets/waves-dark.svg') center / cover; border: 1px solid var(--color-gold); }
+:root[data-theme="light"] .hero { background: linear-gradient(125deg, rgba(255,255,255,.78), rgba(218,237,253,.72)), url('../assets/waves-light.svg') center / cover; border: 1px solid var(--color-gold); }
+:root[data-theme="dark"] .hero h1,
+:root[data-theme="dark"] .hero .subhead { color: var(--color-text); }
+:root[data-theme="dark"] .profile-cover { background: linear-gradient(110deg, #070a0f, #26354a 55%, #8e6d36); }
+:root[data-theme="dark"] .artist-page-hero,
+:root[data-theme="dark"] .artist-artwork { border: 1px solid var(--color-gold); }
+:root[data-theme="light"] .artist-page-hero,
+:root[data-theme="light"] .artist-artwork { border: 1px solid var(--color-gold); }
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select { color: var(--color-text); }
+
+.theme-setting-row { align-items: flex-start; }
+.theme-options { display: flex; gap: 12px; }
+.setting-row .theme-option { width: 108px; padding: 7px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--bg-card); color: var(--color-text); text-align: left; font-size: 12px; font-weight: 700; }
+.setting-row .theme-option.selected { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+.theme-preview { display: block; width: 100%; height: 56px; margin-bottom: 7px; border-radius: 7px; border: 1px solid var(--color-gold); background-position: center; background-size: cover; }
+.theme-option-light .theme-preview { background-image: url('../assets/waves-light.svg'); }
+.theme-option-dark .theme-preview { background-image: url('../assets/waves-dark.svg'); }
+@media (max-width: 620px) { .theme-setting-row { flex-direction: column; } }
+
+/* NewMusiq entrance: always dark, independent of the in-app appearance setting. */
+:root[data-theme="dark"] .auth-screen,
+:root[data-theme="light"] .auth-screen,
+:root:not([data-theme]) .auth-screen {
+  background: linear-gradient(112deg, rgba(2, 3, 6, .95), rgba(9, 11, 16, .86)), url('../assets/waves-dark.svg') center / cover fixed;
+  color: #f4eddf;
+}
+.auth-panel { max-height: 100vh; overflow-y: auto; }
+.auth-panel .auth-brand { display: inline-block; position: relative; margin-bottom: 48px; }
+.auth-brand-title { display: inline-block; position: relative; font: 800 clamp(45px, 5vw, 76px)/1 var(--font-display); letter-spacing: -.07em; background: linear-gradient(105deg, #654617 0%, #c29443 25%, #fff1b9 43%, #a5732e 58%, #e3be6b 75%, #70501f 100%); background-size: 220% 100%; background-clip: text; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 0 12px rgba(229, 182, 82, .35)); animation: titleShine 8s ease-in-out infinite alternate; }
+.auth-title-wave { position: absolute; left: -2%; top: 39%; width: 104%; height: 30%; overflow: visible; }
+.auth-title-wave path { fill: none; stroke: #fff0b5; stroke-width: 2.4; stroke-linecap: round; filter: drop-shadow(0 0 5px #e2b960); opacity: .82; }
+@keyframes titleShine { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+.auth-copy .eyebrow { color: #d8b56e; }
+.auth-copy h1 { color: #f9f3e8 !important; }
+.auth-copy > p:not(.eyebrow) { color: #b8b6af; }
+.auth-label { color: #e8dfce; }
+.auth-label small { color: #b3aa9b; }
+.auth-panel input,
+:root[data-theme="dark"] .auth-panel input,
+:root[data-theme="light"] .auth-panel input { background: #10141b !important; color: #f8f1e5 !important; border: 1px solid #8a713f !important; }
+.auth-panel input::placeholder { color: #938b7d; }
+.auth-panel input:focus { border-color: #e3bd70 !important; box-shadow: 0 0 0 3px rgba(225, 179, 86, .18); }
+.role-picker button,
+:root[data-theme="dark"] .role-picker button,
+:root[data-theme="light"] .role-picker button { background: #10141b; color: #dbd2c1; border-color: #7b6439; }
+.role-picker .selected,
+:root[data-theme="dark"] .role-picker .selected,
+:root[data-theme="light"] .role-picker .selected { background: #302515; color: #ffe1a0; border-color: #d0a455; }
+.auth-submit,
+:root[data-theme="dark"] .auth-submit,
+:root[data-theme="light"] .auth-submit { background: linear-gradient(105deg, #9f712d, #f3d088 50%, #ae7d35); color: #17110a; box-shadow: 0 5px 20px rgba(194, 144, 62, .22); }
+.auth-submit:hover { background: linear-gradient(105deg, #bb893e, #ffe3a1 50%, #c9974e); box-shadow: 0 9px 25px rgba(194, 144, 62, .36); }
+.auth-switch { color: #b8b6af; }
+.auth-switch button { color: #edc675; }
+
+.auth-art { display: block; background: radial-gradient(circle at 55% 30%, rgba(180, 140, 65, .24), transparent 36%), radial-gradient(circle at 85% 86%, rgba(185, 194, 207, .14), transparent 28%), #080a0e; border-left: 1px solid #8f713c; isolation: isolate; }
+.auth-art::before { content: ''; position: absolute; inset: 0; z-index: -1; background: url('../assets/waves-dark.svg') center / cover; opacity: .48; }
+.auth-vinyl { position: absolute; aspect-ratio: 1; border-radius: 50%; z-index: 1; display: grid; place-items: center; animation: none; border: 3px solid var(--vinyl-edge); background: radial-gradient(circle, transparent 0 17%, rgba(3,4,7,.8) 17.4% 19%, transparent 19.5%), repeating-radial-gradient(circle, rgba(255,255,255,.13) 0 1px, rgba(0,0,0,.13) 2px 5px), conic-gradient(from 25deg, var(--vinyl-dark), var(--vinyl-light), var(--vinyl-dark), var(--vinyl-light), var(--vinyl-dark)); box-shadow: 0 26px 58px rgba(0,0,0,.65), inset 0 0 0 7px rgba(255,255,255,.15), inset 0 0 26px rgba(0,0,0,.5); }
+.auth-vinyl::before { content: ''; position: absolute; width: 25%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, var(--vinyl-light), var(--vinyl-dark)); border: 2px solid var(--vinyl-edge); box-shadow: 0 0 0 7px rgba(0,0,0,.18), inset 0 0 12px rgba(255,255,255,.32); }
+.auth-vinyl::after { content: ''; position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #111; box-shadow: 0 0 0 2px rgba(255,255,255,.6); }
+.auth-vinyl span { z-index: 2; transform: translateY(24px); font: 800 clamp(8px, .9vw, 12px) var(--font-display); letter-spacing: .13em; color: #111; }
+.auth-vinyl.gold { --vinyl-dark: #684717; --vinyl-light: #f6d478; --vinyl-edge: #c49745; width: min(31vw, 385px); left: 6%; top: 17%; transform: rotate(-16deg); }
+.auth-vinyl.platinum { --vinyl-dark: #65717c; --vinyl-light: #f3f7fa; --vinyl-edge: #c9d1d8; width: min(24vw, 305px); right: 3%; top: 7%; transform: rotate(21deg); z-index: 2; }
+.auth-vinyl.diamond { --vinyl-dark: #4c7184; --vinyl-light: #d9fbff; --vinyl-edge: #d8e9ed; width: min(27vw, 345px); left: 34%; bottom: 12%; transform: rotate(-29deg); z-index: 3; }
+.auth-vinyl.diamond span { color: #173c4d; }
+.auth-art p { left: 6%; bottom: 31px; z-index: 4; padding: 10px 14px; border-left: 2px solid #d5aa58; background: rgba(3,5,9,.75); color: #eee7dc; font-size: 18px; text-shadow: 0 2px 10px #000; }
+.auth-art strong { color: #e7bd6c; }
+@media (max-width: 900px) {
+  .auth-vinyl.gold { width: 36vw; left: -3%; }
+  .auth-vinyl.platinum { width: 29vw; right: -5%; }
+  .auth-vinyl.diamond { width: 32vw; left: 24%; }
+}
+@media (max-width: 700px) {
+  .auth-art { display: none; }
+  .auth-brand-title { font-size: clamp(45px, 12vw, 70px); }
+}
+@media (prefers-reduced-motion: reduce) { .auth-brand-title { animation: none; } }

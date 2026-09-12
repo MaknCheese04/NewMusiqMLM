@@ -35,7 +35,9 @@ function SongList({ songs, totals, getTrackKey, playTrack, mode }) {
             </button>
             <span className="artist-song-stat">
               {mode === 'rated'
-                ? rating?.rating_count ? `${(rating.rating_sum / rating.rating_count).toFixed(1)} ★` : 'New'
+                ? rating?.rating_count
+                  ? <span className="artist-rating-reveal" tabIndex={0} aria-label={`Average rating ${(rating.rating_sum / rating.rating_count).toFixed(1)} out of 5`}><Star size={14} fill="currentColor" /><span>{(rating.rating_sum / rating.rating_count).toFixed(1)}/5</span></span>
+                  : 'New'
                 : `${Number(rating || 0).toLocaleString()} plays`}
             </span>
           </li>
@@ -141,7 +143,7 @@ export function ArtistPage({ artistName, onBack }) {
     <div className="artist-page" style={{ '--artist-dark': colors[0], '--artist-mid': colors[1], '--artist-light': colors[2] }}>
       <button className="artist-back" type="button" onClick={onBack}><ArrowLeft size={16} /> Back to music</button>
       <header className="artist-page-hero">
-        <p className="eyebrow">ARTIST / SOUNDWAVE</p>
+        <p className="eyebrow">ARTIST / NEWMUSIQ</p>
         <h1>{artistName}</h1>
         <p className="artist-tagline">{tagline}</p>
         <div className="artist-story">
@@ -181,7 +183,7 @@ export function ArtistPage({ artistName, onBack }) {
                 <span className="artist-album-cover" style={{ background: cover(album) }}><Disc3 size={32} /></span>
                 <strong>{album.name}</strong>
                 <span>{album.release_year || 'Year TBA'}</span>
-                <small>{total?.rating_count ? <><Star size={12} fill="currentColor" /> {(total.rating_sum / total.rating_count).toFixed(1)}/5</> : 'Not rated yet'}</small>
+                <small>{total?.rating_count ? <><Star size={12} fill="currentColor" /><span className="artist-rating-value">{(total.rating_sum / total.rating_count).toFixed(1)}/5</span></> : 'Not rated yet'}</small>
               </button>
             );
           }) : <p>No albums listed yet.</p>}
