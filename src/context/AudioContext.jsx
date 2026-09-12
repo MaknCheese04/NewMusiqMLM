@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { safeStorage } from '../lib/safeStorage';
+import { useAuth } from './AuthContext';
 
 const AudioContext = createContext();
 
@@ -14,6 +15,7 @@ const defaultArts = [
 ];
 
 export function AudioProvider({ children }) {
+  const { user } = useAuth();
   const [supabaseSongs, setSupabaseSongs] = useState([]);
   const [supabaseArtists, setSupabaseArtists] = useState([]);
   const [supabaseAlbums, setSupabaseAlbums] = useState([]);
@@ -49,6 +51,130 @@ export function AudioProvider({ children }) {
   });
 
   const [artistReleases, setArtistReleases] = useState([]);
+  const [songRatings, setSongRatings] = useState({});
+  const [ratingSaving, setRatingSaving] = useState(false);
+  const [ratingError, setRatingError] = useState('');
+  const [albumRatings, setAlbumRatings] = useState({});
+  const [albumRatingTotals, setAlbumRatingTotals] = useState({});
+  const [albumRatingSaving, setAlbumRatingSaving] = useState(null);
+  const [albumRatingError, setAlbumRatingError] = useState('');
+
+  const getAlbumKey = (album) => album.album_id != null
+    ? `album:${album.album_id}`
+    : `demo-album:${album.name}:${album.artist || ''}`;
+
+  useEffect(() => {
+    if (!user?.id) {
+      setAlbumRatings({});
+      setAlbumRatingTotals({});
+      return;
+    }
+
+    let active = true;
+    async function loadAlbumRatings() {
+      const [own, totals] = await Promise.all([
+        supabase.from('album_ratings').select('album_key, rating').eq('user_id', user.id),
+        supabase.from('album_rating_totals').select('album_key, rating_count, rating_sum')
+      ]);
+      if (!active) return;
+      if (own.error || totals.error) {
+        setAlbumRatingError('Could not load album ratings.');
+        return;
+      }
+      setAlbumRatings(Object.fromEntries((own.data || []).map(row => [row.album_key, row.rating])));
+      setAlbumRatingTotals(Object.fromEntries((totals.data || []).map(row => [row.album_key, row])));
+    }
+    loadAlbumRatings();
+    return () => { active = false; };
+  }, [user?.id]);
+
+  const rateAlbum = async (album, rating) => {
+    if (!user?.id || !Number.isInteger(rating) || rating < 0 || rating > 5 || albumRatingSaving) return;
+    const albumKey = getAlbumKey(album);
+    const previousRating = albumRatings[albumKey];
+    setAlbumRatingError('');
+    setAlbumRatingSaving(albumKey);
+    setAlbumRatings(prev => ({ ...prev, [albumKey]: rating }));
+
+    const { error } = await supabase.from('album_ratings').upsert({
+      user_id: user.id,
+      album_key: albumKey,
+      album_id: album.album_id ?? null,
+      rating,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id,album_key' });
+
+    if (error) {
+      setAlbumRatings(prev => {
+        const next = { ...prev };
+        if (previousRating === undefined) delete next[albumKey];
+        else next[albumKey] = previousRating;
+        return next;
+      });
+      setAlbumRatingError('Could not save your album rating. Please try again.');
+    } else {
+      const { data, error: totalsError } = await supabase.from('album_rating_totals')
+        .select('album_key, rating_count, rating_sum').eq('album_key', albumKey).single();
+      if (totalsError) setAlbumRatingError('Rating saved, but the average could not be loaded.');
+      else setAlbumRatingTotals(prev => ({ ...prev, [albumKey]: data }));
+    }
+    setAlbumRatingSaving(null);
+  };
+
+  const getTrackKey = (track) => {
+    const catalogSong = supabaseSongs.some(song => song.id === track.id && song.title === track.title);
+    return catalogSong ? `song:${track.id}` : `demo:${track.title}:${track.artist}`;
+  };
+
+  useEffect(() => {
+    if (!user?.id) {
+      setSongRatings({});
+      return;
+    }
+
+    let active = true;
+    supabase.from('song_ratings').select('track_key, rating').eq('user_id', user.id)
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          setRatingError('Could not load your ratings.');
+          return;
+        }
+        setSongRatings(Object.fromEntries((data || []).map(row => [row.track_key, row.rating])));
+      });
+
+    return () => { active = false; };
+  }, [user?.id]);
+
+  const rateTrack = async (track, rating) => {
+    if (!user?.id || !Number.isInteger(rating) || rating < 0 || rating > 5 || ratingSaving) return;
+    const trackKey = getTrackKey(track);
+    const previousRating = songRatings[trackKey];
+    const songId = trackKey.startsWith('song:') ? track.id : null;
+
+    setRatingError('');
+    setRatingSaving(true);
+    setSongRatings(prev => ({ ...prev, [trackKey]: rating }));
+
+    const { error } = await supabase.from('song_ratings').upsert({
+      user_id: user.id,
+      track_key: trackKey,
+      song_id: songId,
+      rating,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id,track_key' });
+
+    if (error) {
+      setSongRatings(prev => {
+        const next = { ...prev };
+        if (previousRating === undefined) delete next[trackKey];
+        else next[trackKey] = previousRating;
+        return next;
+      });
+      setRatingError('Could not save your rating. Please try again.');
+    }
+    setRatingSaving(false);
+  };
 
   // Fetch initial relational data dynamically from Supabase database tables
   useEffect(() => {
@@ -320,6 +446,16 @@ export function AudioProvider({ children }) {
       savedSongs,
       playlists,
       artistReleases,
+      currentRating: songRatings[getTrackKey(currentTrack)] ?? null,
+      ratingSaving,
+      ratingError,
+      rateTrack,
+      albumRatings,
+      albumRatingTotals,
+      albumRatingSaving,
+      albumRatingError,
+      getAlbumKey,
+      rateAlbum,
       togglePlay,
       playTrack,
       playNext,

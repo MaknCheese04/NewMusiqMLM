@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAudio } from '../../context/AudioContext';
-import { Play, Pause, Loader2 } from 'lucide-react';
+import { Play, Pause, Loader2, Star } from 'lucide-react';
 
 const quick = [
   ["Night drives", "linear-gradient(135deg,#2a235e,#ea7c9c)"],
@@ -12,13 +12,23 @@ const quick = [
 ];
 
 export function HomePage() {
-  const { isPlaying, isRetrieving, retrievalStatus, togglePlay, playTrack, currentTrack, supabaseSongs, isLoadingData } = useAudio();
+  const {
+    isPlaying, isRetrieving, retrievalStatus, togglePlay, playTrack, currentTrack,
+    supabaseSongs, supabaseAlbums, isLoadingData, albumRatings, albumRatingTotals,
+    albumRatingSaving, albumRatingError, getAlbumKey, rateAlbum
+  } = useAudio();
 
   const displaySongs = supabaseSongs.length ? supabaseSongs : [
     { id: 1, title: "Let's Groove", artist: "Earth, Wind & Fire", album: "Raise!", art: "linear-gradient(135deg,#f8be70,#e37d6c)", duration: 224 },
     { id: 3, title: "Velvet Skies", artist: "Luna Vale", album: "Velvet Skies EP", art: "linear-gradient(135deg,#df789f,#f8c18e 55%,#493f7d)", duration: 224 },
     { id: 4, title: "After Hours", artist: "The Violets", album: "After Hours", art: "linear-gradient(135deg,#2b315c,#a589e8)", duration: 198 }
   ];
+  const displayAlbums = supabaseAlbums.length
+    ? supabaseAlbums.map((album, index) => ({ ...album, art: displaySongs[index % displaySongs.length]?.art }))
+    : [...new Map(displaySongs.map(track => [
+        `${track.album}:${track.artist}`,
+        { name: track.album, artist: track.artist, art: track.art }
+      ])).values()];
 
   return (
     <div className="home-page">
@@ -98,6 +108,48 @@ export function HomePage() {
                 </div>
                 <h3>{track.title}</h3>
                 <p>{track.artist} · <em>{track.album}</em></p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="section-container">
+        <div className="section-header">
+          <div>
+            <h2>Albums</h2>
+            <p>Rate a whole album and see what listeners think.</p>
+            {albumRatingError && <p className="album-rating-error" role="alert">{albumRatingError}</p>}
+          </div>
+        </div>
+        <div className="cards-grid">
+          {displayAlbums.map(album => {
+            const albumKey = getAlbumKey(album);
+            const yourRating = albumRatings[albumKey] ?? null;
+            const totals = albumRatingTotals[albumKey];
+            const isSaving = albumRatingSaving === albumKey;
+            return (
+              <article className="card album-card" key={albumKey}>
+                <div className="card-cover" style={{ background: album.art }} />
+                <h3>{album.name}</h3>
+                <p>{album.artist || 'Album'}</p>
+                <div className="album-rating-controls" aria-label={`Rate ${album.name} from 0 to 5 stars`}>
+                  <button type="button" className={yourRating === 0 ? 'selected' : ''}
+                    onClick={() => rateAlbum(album, 0)} disabled={Boolean(albumRatingSaving)}
+                    aria-label={`Rate ${album.name} 0 out of 5 stars`} aria-pressed={yourRating === 0}>0</button>
+                  {[1, 2, 3, 4, 5].map(stars => (
+                    <button type="button" key={stars} onClick={() => rateAlbum(album, stars)}
+                      disabled={Boolean(albumRatingSaving)} aria-label={`Rate ${album.name} ${stars} out of 5 stars`}
+                      aria-pressed={yourRating === stars}>
+                      <Star size={19} fill={yourRating !== null && stars <= yourRating ? 'currentColor' : 'none'} />
+                    </button>
+                  ))}
+                </div>
+                <p className="album-rating-summary">
+                  {isSaving ? 'Saving…' : yourRating === null ? 'Rate to see the listener average' :
+                    totals?.rating_count ? `Your rating: ${yourRating}/5 · Average: ${(totals.rating_sum / totals.rating_count).toFixed(1)}/5 (${totals.rating_count} ${totals.rating_count === 1 ? 'listener' : 'listeners'})`
+                      : `Your rating: ${yourRating}/5 · Loading average…`}
+                </p>
               </article>
             );
           })}

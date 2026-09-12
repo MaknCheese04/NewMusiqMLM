@@ -14,10 +14,14 @@ import { EditProfileModal } from './components/modals/EditProfileModal';
 import './styles/index.css';
 
 function MainApp() {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const [activePage, setActivePage] = useState('home');
   const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+
+  if (loading) {
+    return null;
+  }
 
   if (!session) {
     return <AuthScreen />;

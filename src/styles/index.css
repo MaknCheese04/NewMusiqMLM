@@ -1067,13 +1067,36 @@ input, textarea, select {
 
 .player-options {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
   justify-content: flex-end;
-  gap: 14px;
+  gap: 5px;
   width: 25%;
-  min-width: 180px;
+  min-width: 190px;
   color: var(--color-text-muted);
 }
+
+.album-card { cursor: default; }
+.album-rating-controls { display: flex; align-items: center; gap: 4px; margin-top: 12px; }
+.album-rating-controls button { display: grid; place-items: center; width: 24px; height: 28px; color: var(--color-text-muted); font-size: 12px; font-weight: 800; }
+.album-rating-controls button:hover, .album-rating-controls button[aria-pressed="true"],
+.album-rating-controls button:has(svg[fill="currentColor"]) { color: #e5a33c; }
+.album-rating-controls button:disabled { cursor: wait; }
+.album-card .album-rating-summary { display: block; margin-top: 8px; min-height: 32px; line-height: 1.4; }
+.album-rating-error { color: #b63e4b !important; }
+
+.song-rating { display: flex; align-items: center; gap: 8px; position: relative; }
+.song-rating-label { font-size: 11px; white-space: nowrap; }
+.song-rating-buttons { display: flex; align-items: center; gap: 1px; }
+.song-rating-buttons button { color: var(--color-text-muted); padding: 2px; display: grid; place-items: center; }
+.song-rating-buttons button:hover, .song-rating-buttons button[aria-pressed="true"],
+.song-rating-buttons button:has(svg[fill="currentColor"]) { color: #e5a33c; }
+.song-rating-buttons button:disabled { cursor: wait; }
+.song-rating-buttons .rating-zero { font-size: 11px; font-weight: 800; width: 18px; height: 22px; }
+.song-rating-buttons .rating-zero.selected { color: var(--color-primary); }
+.song-rating-error { position: absolute; right: 0; bottom: 100%; width: 230px; color: #b63e4b; font-size: 11px; text-align: right; }
+.volume-control { display: flex; align-items: center; gap: 10px; }
+.volume-control input { width: 100px; }
 
 /* Modals */
 .modal-overlay {
@@ -1151,6 +1174,7 @@ input, textarea, select {
 
 /* Responsive adjustments */
 @media (max-width: 900px) {
+  .song-rating-label { display: none; }
   :root {
     --sidebar-width: 76px;
   }
@@ -1171,6 +1195,13 @@ input, textarea, select {
 }
 
 @media(max-width: 700px) {
+  .player-bar { height: auto; min-height: 124px; flex-wrap: wrap; padding: 8px 12px; gap: 4px 10px; }
+  .now-playing { width: calc(50% - 5px); min-width: 0; }
+  .playback-controls { order: 3; width: 100%; max-width: none; gap: 2px; }
+  .controls-row { gap: 14px; }
+  .player-options { width: calc(50% - 5px); min-width: 0; }
+  .volume-control { display: none; }
+  .content-wrapper { padding-bottom: 160px; }
   .auth-screen {
     grid-template-columns: 1fr;
   }

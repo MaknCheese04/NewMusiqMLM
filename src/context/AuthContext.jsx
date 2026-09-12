@@ -80,6 +80,7 @@ export function AuthProvider({ children }) {
       email: email.trim().toLowerCase(),
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           name: displayName,
           role: role || 'listener',
