@@ -11,4 +11,8 @@ Basic functionality:
 - Artist pages
 - Song genres
 - contact us
-- interactive ai for questions
+- can rate songs of the artists 
+can download songs onto your devices
+never clear queue even when the app restarts
+keep the playlists separate from your library
+add a personalized section to gage your taste in music, asking questions about sounds, types of artists you typically listen to, genres 
