@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { safeStorage } from '../lib/safeStorage';
 
 const AuthContext = createContext();
 
@@ -9,15 +10,23 @@ const defaultProfile = {
 };
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(() => localStorage.getItem('soundwave-session') || null);
+  const [session, setSession] = useState(() => safeStorage.getItem('soundwave-session') || null);
   const [profile, setProfile] = useState(() => {
-    const saved = localStorage.getItem('soundwave-profile');
-    return saved ? JSON.parse(saved) : defaultProfile;
+    const saved = safeStorage.getItem('soundwave-profile');
+    try {
+      return saved ? JSON.parse(saved) : defaultProfile;
+    } catch {
+      return defaultProfile;
+    }
   });
 
   const [accounts, setAccounts] = useState(() => {
-    const saved = localStorage.getItem('soundwave-accounts');
-    return saved ? JSON.parse(saved) : [];
+    const saved = safeStorage.getItem('soundwave-accounts');
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const currentUser = accounts.find(a => a.email === session) || (session ? {
@@ -29,18 +38,18 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (session) {
-      localStorage.setItem('soundwave-session', session);
+      safeStorage.setItem('soundwave-session', session);
     } else {
-      localStorage.removeItem('soundwave-session');
+      safeStorage.removeItem('soundwave-session');
     }
   }, [session]);
 
   useEffect(() => {
-    localStorage.setItem('soundwave-profile', JSON.stringify(profile));
+    safeStorage.setItem('soundwave-profile', JSON.stringify(profile));
   }, [profile]);
 
   useEffect(() => {
-    localStorage.setItem('soundwave-accounts', JSON.stringify(accounts));
+    safeStorage.setItem('soundwave-accounts', JSON.stringify(accounts));
   }, [accounts]);
 
   const loginDemo = () => {

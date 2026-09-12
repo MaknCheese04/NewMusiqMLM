@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { safeStorage } from '../lib/safeStorage';
 
 const AudioContext = createContext();
 
@@ -15,34 +16,40 @@ export function AudioProvider({ children }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [volume, setVolume] = useState(70);
-  const audioRef = useRef(null);
 
   const [savedSongs, setSavedSongs] = useState(() => {
-    const saved = localStorage.getItem('soundwave-saved-songs');
-    return saved ? JSON.parse(saved) : [];
+    const saved = safeStorage.getItem('soundwave-saved-songs');
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const [playlists, setPlaylists] = useState(() => {
-    const saved = localStorage.getItem('soundwave-playlists');
-    return saved ? JSON.parse(saved) : [
-      { name: "Night drives", songs: [] },
-      { name: "Feel good friday", songs: [] },
-      { name: "Focus flow", songs: [] },
-      { name: "New discoveries", songs: [] }
-    ];
+    const saved = safeStorage.getItem('soundwave-playlists');
+    try {
+      return saved ? JSON.parse(saved) : [
+        { name: "Night drives", songs: [] },
+        { name: "Feel good friday", songs: [] },
+        { name: "Focus flow", songs: [] },
+        { name: "New discoveries", songs: [] }
+      ];
+    } catch {
+      return [];
+    }
   });
 
   const [artistReleases, setArtistReleases] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem('soundwave-saved-songs', JSON.stringify(savedSongs));
+    safeStorage.setItem('soundwave-saved-songs', JSON.stringify(savedSongs));
   }, [savedSongs]);
 
   useEffect(() => {
-    localStorage.setItem('soundwave-playlists', JSON.stringify(playlists));
+    safeStorage.setItem('soundwave-playlists', JSON.stringify(playlists));
   }, [playlists]);
 
-  // Audio timer simulation for built-in or HTML5 audio playback
   useEffect(() => {
     let timer;
     if (isPlaying) {

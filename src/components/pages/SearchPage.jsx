@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAudio } from '../../context/AudioContext';
+import { safeStorage } from '../../lib/safeStorage';
 import { Search as SearchIcon, ArrowUpRight, Music, Play } from 'lucide-react';
 
 const songLyrics = {
@@ -28,13 +29,17 @@ export function SearchPage({ onClose }) {
   const { playTrack } = useAudio();
   const [query, setQuery] = useState('');
   const [history, setHistory] = useState(() => {
-    const saved = localStorage.getItem('soundwave-search-history');
-    return saved ? JSON.parse(saved) : [];
+    const saved = safeStorage.getItem('soundwave-search-history');
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('soundwave-search-history', JSON.stringify(history));
+    safeStorage.setItem('soundwave-search-history', JSON.stringify(history));
   }, [history]);
 
   const handleSaveSearch = (q) => {
