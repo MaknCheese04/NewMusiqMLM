@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import '../../src/styles/index.css';
 
 export function AuthScreen() {
-  const { login, register, loginDemo } = useAuth();
+  const { login, register } = useAuth();
   const [authMode, setAuthMode] = useState('signin'); // 'signin' or 'register'
   const [role, setRole] = useState('listener'); // 'listener' or 'artist'
   
@@ -12,19 +12,28 @@ export function AuthScreen() {
   const [name, setName] = useState('');
   const [artistName, setArtistName] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setInfoMessage('');
+    setIsSubmitting(true);
 
     try {
       if (authMode === 'register') {
-        register({ email, password, name, role, artistName });
+        const res = await register({ email, password, name, role, artistName });
+        if (res?.user && !res?.session) {
+          setInfoMessage('Account created! Please check your email to confirm your account.');
+        }
       } else {
-        login(email, password);
+        await login(email, password);
       }
     } catch (err) {
       setError(err.message || 'An error occurred during authentication.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -78,6 +87,7 @@ export function AuthScreen() {
                 onChange={(e) => setName(e.target.value)}
                 maxLength={32}
                 placeholder="Alex Rivera"
+                disabled={isSubmitting}
               />
             </label>
           )}
@@ -90,6 +100,7 @@ export function AuthScreen() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="alex@example.com"
+              disabled={isSubmitting}
             />
           </label>
 
@@ -101,6 +112,7 @@ export function AuthScreen() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isSubmitting}
             />
           </label>
 
@@ -112,20 +124,17 @@ export function AuthScreen() {
                 onChange={(e) => setArtistName(e.target.value)}
                 maxLength={48}
                 placeholder="Stage or band name"
+                disabled={isSubmitting}
               />
             </label>
           )}
 
-          <button className="auth-submit" type="submit">
-            {isRegistering ? 'Create account' : 'Sign in'}
-          </button>
-
-          <button
-            type="button"
-            className="demo-login"
-            onClick={loginDemo}
-          >
-            Explore with a demo account
+          <button className="auth-submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? 'Connecting to Supabase...'
+              : isRegistering
+                ? 'Create account'
+                : 'Sign in'}
           </button>
 
           <p className="auth-switch">
@@ -135,12 +144,14 @@ export function AuthScreen() {
               onClick={() => {
                 setAuthMode(isRegistering ? 'signin' : 'register');
                 setError('');
+                setInfoMessage('');
               }}
             >
               {isRegistering ? 'Sign in' : 'Create an account'}
             </button>
           </p>
 
+          {infoMessage && <p style={{ color: '#4d9b78', textAlign: 'center', fontSize: '13px', marginTop: '12px' }}>{infoMessage}</p>}
           {error && <p className="auth-error">{error}</p>}
         </form>
       </div>

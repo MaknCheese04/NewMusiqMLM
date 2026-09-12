@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { safeStorage } from '../lib/safeStorage';
 
 const AuthContext = createContext();
@@ -10,7 +11,9 @@ const defaultProfile = {
 };
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(() => safeStorage.getItem('soundwave-session') || null);
+  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(() => {
     const saved = safeStorage.getItem('soundwave-profile');
     try {
@@ -20,92 +23,86 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const [accounts, setAccounts] = useState(() => {
-    const saved = safeStorage.getItem('soundwave-accounts');
-    try {
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const currentUser = accounts.find(a => a.email === session) || (session ? {
-    email: session,
-    name: profile.name,
-    role: 'listener',
-    artistName: ''
-  } : null);
-
   useEffect(() => {
-    if (session) {
-      safeStorage.setItem('soundwave-session', session);
-    } else {
-      safeStorage.removeItem('soundwave-session');
-    }
-  }, [session]);
+    // 1. Fetch current session on load
+    supabase.auth.getSession().then(({ data: { session: activeSession } }) => {
+      setSession(activeSession);
+      setUser(activeSession?.user ?? null);
+      if (activeSession?.user?.user_metadata?.name) {
+        setProfile(prev => ({
+          ...prev,
+          name: activeSession.user.user_metadata.name
+        }));
+      }
+      setLoading(false);
+    }).catch(err => {
+      console.warn('Error fetching Supabase session:', err);
+      setLoading(false);
+    });
+
+    // 2. Listen to real-time auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      if (currentSession?.user?.user_metadata?.name) {
+        setProfile(prev => ({
+          ...prev,
+          name: currentSession.user.user_metadata.name
+        }));
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     safeStorage.setItem('soundwave-profile', JSON.stringify(profile));
   }, [profile]);
 
-  useEffect(() => {
-    safeStorage.setItem('soundwave-accounts', JSON.stringify(accounts));
-  }, [accounts]);
+  const login = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password
+    });
 
-  const loginDemo = () => {
-    const email = 'demo@soundwave.app';
-    const existing = accounts.find(a => a.email === email);
-    if (!existing) {
-      const demoAccount = {
-        email,
-        password: 'demo1234',
-        name: 'Demo Listener',
-        role: 'listener',
-        artistName: ''
-      };
-      setAccounts(prev => [...prev, demoAccount]);
+    if (error) {
+      throw new Error(error.message);
     }
-    setProfile(prev => ({ ...prev, name: 'Demo Listener' }));
-    setSession(email);
+
+    return data;
   };
 
-  const login = (email, password) => {
-    const formattedEmail = email.trim().toLowerCase();
-    const account = accounts.find(a => a.email === formattedEmail);
-    if (account && account.password !== password) {
-      throw new Error('That password does not match this account.');
-    }
-    if (!account) {
-      const name = formattedEmail.split('@')[0];
-      const newAcc = { email: formattedEmail, password, name, role: 'listener', artistName: '' };
-      setAccounts(prev => [...prev, newAcc]);
-      setProfile(prev => ({ ...prev, name }));
-    } else {
-      setProfile(prev => ({ ...prev, name: account.name }));
-    }
-    setSession(formattedEmail);
-  };
-
-  const register = ({ email, password, name, role, artistName }) => {
-    const formattedEmail = email.trim().toLowerCase();
-    if (accounts.some(a => a.email === formattedEmail)) {
-      throw new Error('An account with that email already exists.');
-    }
-    const displayName = name.trim() || formattedEmail.split('@')[0];
-    const newAcc = {
-      email: formattedEmail,
+  const register = async ({ email, password, name, role, artistName }) => {
+    const displayName = name.trim() || email.split('@')[0];
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
       password,
-      name: displayName,
-      role: role || 'listener',
-      artistName: artistName || displayName
-    };
-    setAccounts(prev => [...prev, newAcc]);
-    setProfile(prev => ({ ...prev, name: displayName }));
-    setSession(formattedEmail);
+      options: {
+        data: {
+          name: displayName,
+          role: role || 'listener',
+          artistName: artistName || displayName
+        }
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (data?.user) {
+      setProfile(prev => ({ ...prev, name: displayName }));
+    }
+
+    return data;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setSession(null);
+    setUser(null);
   };
 
   const updateProfile = (updated) => {
@@ -115,14 +112,22 @@ export function AuthProvider({ children }) {
     }));
   };
 
+  const currentUser = user ? {
+    email: user.email,
+    name: user.user_metadata?.name || profile.name,
+    role: user.user_metadata?.role || 'listener',
+    artistName: user.user_metadata?.artistName || ''
+  } : null;
+
   return (
     <AuthContext.Provider value={{
       session,
+      user,
       currentUser,
+      loading,
       profile,
       login,
       register,
-      loginDemo,
       logout,
       updateProfile
     }}>

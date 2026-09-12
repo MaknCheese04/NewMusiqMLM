@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAudio } from '../../context/AudioContext';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, Loader2 } from 'lucide-react';
 
 const quick = [
   ["Night drives", "linear-gradient(135deg,#2a235e,#ea7c9c)"],
@@ -11,24 +11,14 @@ const quick = [
   ["Late night jazz", "linear-gradient(135deg,#1c293d,#ba6684)"]
 ];
 
-const made = [
-  ["Daylight", "An easy, uplifting mix", "linear-gradient(135deg,#f8be70,#e37d6c)"],
-  ["Alt currents", "The best of alternative now", "linear-gradient(135deg,#1f345e,#59b3c2)"],
-  ["Dream pop", "Float through the afternoon", "linear-gradient(135deg,#bb94e8,#ee92b5)"],
-  ["Find your flow", "Electronic energy for you", "linear-gradient(135deg,#5dccb7,#2b6799)"],
-  ["Soul kitchen", "Warm grooves, all day", "linear-gradient(135deg,#ec896c,#8b3c62)"]
-];
-
-const recent = [
-  { title: "Velvet Skies", artist: "Luna Vale", art: "linear-gradient(135deg,#df789f,#f8c18e 55%,#493f7d)", duration: 224 },
-  { title: "After Hours", artist: "The Violets", art: "linear-gradient(135deg,#2b315c,#a589e8)", duration: 198 },
-  { title: "Open Road", artist: "Milo Sun", art: "linear-gradient(135deg,#7bc3c0,#d2e189)", duration: 210 },
-  { title: "Gold Dust", artist: "June Harper", art: "linear-gradient(135deg,#e5ae5a,#8e456d)", duration: 240 },
-  { title: "Blue Motel", artist: "Neon Coast", art: "linear-gradient(135deg,#315878,#cc6c80)", duration: 205 }
-];
-
 export function HomePage() {
-  const { isPlaying, togglePlay, playTrack, currentTrack } = useAudio();
+  const { isPlaying, isRetrieving, retrievalStatus, togglePlay, playTrack, currentTrack, supabaseSongs, isLoadingData } = useAudio();
+
+  const displaySongs = supabaseSongs.length ? supabaseSongs : [
+    { id: 1, title: "Let's Groove", artist: "Earth, Wind & Fire", album: "Raise!", art: "linear-gradient(135deg,#f8be70,#e37d6c)", duration: 224 },
+    { id: 3, title: "Velvet Skies", artist: "Luna Vale", album: "Velvet Skies EP", art: "linear-gradient(135deg,#df789f,#f8c18e 55%,#493f7d)", duration: 224 },
+    { id: 4, title: "After Hours", artist: "The Violets", album: "After Hours", art: "linear-gradient(135deg,#2b315c,#a589e8)", duration: 198 }
+  ];
 
   return (
     <div className="home-page">
@@ -40,8 +30,12 @@ export function HomePage() {
             <em>favorite sound.</em>
           </h1>
           <p className="subhead">Music that moves with your moment.</p>
-          <button className="btn-play-hero" onClick={togglePlay}>
-            {isPlaying ? (
+          <button className="btn-play-hero" onClick={togglePlay} disabled={isRetrieving}>
+            {isRetrieving ? (
+              <>
+                <Loader2 className="animate-spin" size={18} color="#ffffff" /> Retrieving MP3...
+              </>
+            ) : isPlaying ? (
               <>
                 <Pause size={18} fill="#ffffff" /> Pause
               </>
@@ -63,7 +57,7 @@ export function HomePage() {
             <button
               key={idx}
               className="quick-card"
-              onClick={() => playTrack({ title: name, artist: "Curated Playlist", art, duration: 210 })}
+              onClick={() => playTrack({ id: idx + 1, title: name, artist: "Curated Playlist", album: "Playlist", art, duration: 210 })}
             >
               <div className="quick-art" style={{ background: art }}></div>
               <span>{name}</span>
@@ -75,58 +69,38 @@ export function HomePage() {
       <section className="section-container">
         <div className="section-header">
           <div>
-            <h2>Made for you</h2>
-            <p>Fresh picks based on your listening.</p>
+            <h2>Songs from Supabase Storage & Database</h2>
+            <p>{retrievalStatus || (isLoadingData ? 'Loading relational schema...' : 'Click play to download & stream from Supabase Storage bucket "songs" (<song_id>.mp3)')}</p>
           </div>
           <button className="contact-link">Show all</button>
         </div>
         <div className="cards-grid">
-          {made.map(([title, desc, art], idx) => (
-            <article
-              key={idx}
-              className="card"
-              onClick={() => playTrack({ title, artist: desc, art, duration: 200 })}
-            >
-              <div className="card-cover" style={{ background: art }}>
-                <div className="card-play-btn">
-                  <Play size={20} fill="#ffffff" style={{ marginLeft: '2px' }} />
-                </div>
-              </div>
-              <h3>{title}</h3>
-              <p>{desc}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+          {displaySongs.map((track, idx) => {
+            const isSelected = currentTrack.id === track.id || currentTrack.title === track.title;
+            const isCurrentlyRetrieving = isRetrieving && isSelected;
 
-      <section className="section-container">
-        <div className="section-header">
-          <div>
-            <h2>Recently played</h2>
-            <p>Rediscover what you loved.</p>
-          </div>
-          <button className="contact-link">Show all</button>
-        </div>
-        <div className="cards-grid">
-          {recent.map((track, idx) => (
-            <article
-              key={idx}
-              className="card"
-              onClick={() => playTrack(track)}
-            >
-              <div className="card-cover" style={{ background: track.art }}>
-                <div className="card-play-btn">
-                  {isPlaying && currentTrack.title === track.title ? (
-                    <Pause size={20} fill="#ffffff" />
-                  ) : (
-                    <Play size={20} fill="#ffffff" style={{ marginLeft: '2px' }} />
-                  )}
+            return (
+              <article
+                key={track.id || idx}
+                className="card"
+                onClick={() => playTrack(track)}
+              >
+                <div className="card-cover" style={{ background: track.art }}>
+                  <div className="card-play-btn" style={{ opacity: isCurrentlyRetrieving ? 1 : undefined, transform: isCurrentlyRetrieving ? 'translateY(0)' : undefined }}>
+                    {isCurrentlyRetrieving ? (
+                      <Loader2 className="animate-spin" size={20} color="#ffffff" />
+                    ) : isPlaying && isSelected ? (
+                      <Pause size={20} fill="#ffffff" />
+                    ) : (
+                      <Play size={20} fill="#ffffff" style={{ marginLeft: '2px' }} />
+                    )}
+                  </div>
                 </div>
-              </div>
-              <h3>{track.title}</h3>
-              <p>{track.artist}</p>
-            </article>
-          ))}
+                <h3>{track.title}</h3>
+                <p>{track.artist} · <em>{track.album}</em></p>
+              </article>
+            );
+          })}
         </div>
       </section>
     </div>

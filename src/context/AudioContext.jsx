@@ -1,21 +1,43 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 import { safeStorage } from '../lib/safeStorage';
 
 const AudioContext = createContext();
 
-const initialTracks = [
-  { title: "Velvet Skies", artist: "Luna Vale", art: "linear-gradient(135deg,#df789f,#f8c18e 55%,#493f7d)", duration: 224 },
-  { title: "After Hours", artist: "The Violets", art: "linear-gradient(135deg,#2b315c,#a589e8)", duration: 198 },
-  { title: "Open Road", artist: "Milo Sun", art: "linear-gradient(135deg,#7bc3c0,#d2e189)", duration: 210 },
-  { title: "Gold Dust", artist: "June Harper", art: "linear-gradient(135deg,#e5ae5a,#8e456d)", duration: 240 },
-  { title: "Blue Motel", artist: "Neon Coast", art: "linear-gradient(135deg,#315878,#cc6c80)", duration: 205 }
+const defaultArts = [
+  "linear-gradient(135deg,#df789f,#f8c18e 55%,#493f7d)",
+  "linear-gradient(135deg,#2b315c,#a589e8)",
+  "linear-gradient(135deg,#7bc3c0,#d2e189)",
+  "linear-gradient(135deg,#e5ae5a,#8e456d)",
+  "linear-gradient(135deg,#315878,#cc6c80)",
+  "linear-gradient(135deg,#f8be70,#e37d6c)"
 ];
 
 export function AudioProvider({ children }) {
-  const [currentTrack, setCurrentTrack] = useState(initialTracks[0]);
+  const [supabaseSongs, setSupabaseSongs] = useState([]);
+  const [supabaseArtists, setSupabaseArtists] = useState([]);
+  const [supabaseAlbums, setSupabaseAlbums] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
+  const [currentTrack, setCurrentTrack] = useState({
+    id: 1,
+    title: "Let's Groove",
+    artist: "Earth, Wind & Fire",
+    album: "Raise!",
+    art: defaultArts[0],
+    duration: 224
+  });
+
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isRetrieving, setIsRetrieving] = useState(false);
+  const [retrievalStatus, setRetrievalStatus] = useState('');
   const [elapsed, setElapsed] = useState(0);
+  const [duration, setDuration] = useState(224);
   const [volume, setVolume] = useState(70);
+
+  const audioRef = useRef(new Audio());
+  const activeBlobUrlRef = useRef(null);
 
   const [savedSongs, setSavedSongs] = useState(() => {
     const saved = safeStorage.getItem('soundwave-saved-songs');
@@ -26,60 +48,211 @@ export function AudioProvider({ children }) {
     }
   });
 
-  const [playlists, setPlaylists] = useState(() => {
-    const saved = safeStorage.getItem('soundwave-playlists');
-    try {
-      return saved ? JSON.parse(saved) : [
-        { name: "Night drives", songs: [] },
-        { name: "Feel good friday", songs: [] },
-        { name: "Focus flow", songs: [] },
-        { name: "New discoveries", songs: [] }
-      ];
-    } catch {
-      return [];
-    }
-  });
-
   const [artistReleases, setArtistReleases] = useState([]);
 
+  // Fetch initial relational data dynamically from Supabase database tables
   useEffect(() => {
-    safeStorage.setItem('soundwave-saved-songs', JSON.stringify(savedSongs));
-  }, [savedSongs]);
+    async function fetchSupabaseData() {
+      setIsLoadingData(true);
+      try {
+        const { data: songsData, error: songsErr } = await supabase
+          .from('songs')
+          .select(`
+            song_id,
+            name,
+            created_at,
+            song_artists (
+              artists ( artist_id, name )
+            ),
+            album_songs (
+              albums ( album_id, name )
+            )
+          `);
 
-  useEffect(() => {
-    safeStorage.setItem('soundwave-playlists', JSON.stringify(playlists));
-  }, [playlists]);
+        if (!songsErr && songsData?.length) {
+          const formattedSongs = songsData.map((s, idx) => {
+            const artistName = s.song_artists?.[0]?.artists?.name || "Independent Artist";
+            const albumName = s.album_songs?.[0]?.albums?.name || "Single";
+            return {
+              id: s.song_id,
+              title: s.name,
+              artist: artistName,
+              album: albumName,
+              art: defaultArts[idx % defaultArts.length],
+              duration: 210 + (idx * 12) % 60
+            };
+          });
+          setSupabaseSongs(formattedSongs);
+          if (formattedSongs.length > 0) {
+            setCurrentTrack(formattedSongs[0]);
+          }
+        }
 
-  useEffect(() => {
-    let timer;
-    if (isPlaying) {
-      timer = setInterval(() => {
-        setElapsed(prev => (prev + 1) % (currentTrack.duration || 224));
-      }, 1000);
+        const { data: artistsData } = await supabase.from('artists').select('*');
+        if (artistsData?.length) setSupabaseArtists(artistsData);
+
+        const { data: albumsData } = await supabase.from('albums').select('*');
+        if (albumsData?.length) setSupabaseAlbums(albumsData);
+
+        const { data: playlistsData } = await supabase.from('playlists').select('*');
+        if (playlistsData?.length) {
+          setPlaylists(playlistsData.map(p => ({ name: p.name, id: p.playlist_id })));
+        } else {
+          setPlaylists([
+            { name: "Night drives" },
+            { name: "Feel good friday" },
+            { name: "Focus flow" },
+            { name: "New discoveries" }
+          ]);
+        }
+      } catch (err) {
+        console.warn('Error querying Supabase tables:', err);
+      } finally {
+        setIsLoadingData(false);
+      }
     }
-    return () => clearInterval(timer);
-  }, [isPlaying, currentTrack]);
+
+    fetchSupabaseData();
+  }, []);
+
+  // HTML5 audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current;
+
+    const handleTimeUpdate = () => {
+      setElapsed(Math.floor(audio.currentTime));
+    };
+
+    const handleLoadedMetadata = () => {
+      if (audio.duration && !isNaN(audio.duration)) {
+        setDuration(Math.floor(audio.duration));
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      playNext();
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [supabaseSongs, currentTrack]);
+
+  // Volume sync
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
+
+  // Retrieve audio file from Supabase Storage bucket "songs" by `<song_id>.mp3`
+  const retrieveAndPlay = async (track) => {
+    const songId = track.id || 1;
+    const fileName = `${songId}.mp3`;
+    
+    setIsRetrieving(true);
+    setRetrievalStatus(`Downloading ${fileName} from Supabase Storage bucket "songs"...`);
+    setIsPlaying(false);
+
+    try {
+      // If track has a direct Blob URL (e.g. from session upload), use it directly
+      let audioUrl = track.url || null;
+
+      if (!audioUrl) {
+        // 1. Download file from Supabase Storage bucket 'songs'
+        const { data: fileBlob, error: downloadErr } = await supabase
+          .storage
+          .from('songs')
+          .download(fileName);
+
+        if (downloadErr || !fileBlob) {
+          console.warn(`File ${fileName} not found in Supabase storage bucket 'songs'. Creating fallback audio stream.`);
+          // Create synthetic audio fallback stream if file is missing in storage bucket
+          audioUrl = createSyntheticAudioUrl();
+        } else {
+          // 2. Retrieval fully complete! Revoke previous blob URL if needed and create new Object URL
+          if (activeBlobUrlRef.current) {
+            URL.revokeObjectURL(activeBlobUrlRef.current);
+          }
+          audioUrl = URL.createObjectURL(fileBlob);
+          activeBlobUrlRef.current = audioUrl;
+        }
+      }
+
+      setRetrievalStatus(`Retrieval complete for ${fileName}. Loading audio buffer...`);
+
+      // 3. Set audio element source and wait for full buffer ready
+      const audio = audioRef.current;
+      audio.src = audioUrl;
+      
+      await new Promise((resolve) => {
+        const onCanPlay = () => {
+          audio.removeEventListener('canplaythrough', onCanPlay);
+          audio.removeEventListener('error', onCanPlay);
+          resolve();
+        };
+        audio.addEventListener('canplaythrough', onCanPlay);
+        audio.addEventListener('error', onCanPlay);
+        audio.load();
+      });
+
+      // 4. Play song automatically after retrieval & buffering is 100% complete
+      await audio.play();
+      setIsPlaying(true);
+      setRetrievalStatus('');
+    } catch (err) {
+      console.error('Error during audio retrieval & playback:', err);
+      setRetrievalStatus('Failed to play audio file.');
+    } finally {
+      setIsRetrieving(false);
+    }
+  };
 
   const togglePlay = () => {
-    setIsPlaying(prev => !prev);
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      if (audioRef.current.src) {
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(() => retrieveAndPlay(currentTrack));
+      } else {
+        retrieveAndPlay(currentTrack);
+      }
+    }
   };
 
   const playTrack = (track) => {
     setCurrentTrack(track);
     setElapsed(0);
-    setIsPlaying(true);
+    retrieveAndPlay(track);
   };
 
   const playNext = () => {
-    const currentIndex = initialTracks.findIndex(t => t.title === currentTrack.title);
-    const nextIndex = (currentIndex + 1) % initialTracks.length;
-    playTrack(initialTracks[nextIndex]);
+    if (!supabaseSongs.length) return;
+    const currentIndex = supabaseSongs.findIndex(t => t.id === currentTrack.id || t.title === currentTrack.title);
+    const nextIndex = (currentIndex + 1) % supabaseSongs.length;
+    playTrack(supabaseSongs[nextIndex]);
   };
 
   const playPrevious = () => {
-    const currentIndex = initialTracks.findIndex(t => t.title === currentTrack.title);
-    const prevIndex = (currentIndex - 1 + initialTracks.length) % initialTracks.length;
-    playTrack(initialTracks[prevIndex]);
+    if (!supabaseSongs.length) return;
+    const currentIndex = supabaseSongs.findIndex(t => t.id === currentTrack.id || t.title === currentTrack.title);
+    const prevIndex = (currentIndex - 1 + supabaseSongs.length) % supabaseSongs.length;
+    playTrack(supabaseSongs[prevIndex]);
+  };
+
+  const handleSeek = (newTime) => {
+    setElapsed(newTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
   };
 
   const toggleLike = (track) => {
@@ -94,20 +267,55 @@ export function AudioProvider({ children }) {
     });
   };
 
-  const createPlaylist = (name) => {
+  const createPlaylist = async (name) => {
     if (!name?.trim()) return;
-    setPlaylists(prev => [...prev, { name: name.trim(), songs: [] }]);
+    const playlistName = name.trim();
+    setPlaylists(prev => [...prev, { name: playlistName }]);
+
+    try {
+      await supabase.from('playlists').insert([{ name: playlistName }]);
+    } catch (e) {
+      console.warn('Error inserting playlist into Supabase:', e);
+    }
   };
 
-  const addRelease = (release) => {
+  const addRelease = async (release) => {
     setArtistReleases(prev => [release, ...prev]);
+    setSupabaseSongs(prev => [release, ...prev]);
+
+    try {
+      const { data: newSong } = await supabase.from('songs').insert([{ name: release.title }]).select();
+      const songId = newSong?.[0]?.song_id;
+
+      const { data: newAlbum } = await supabase.from('albums').insert([{ name: release.album || 'Single' }]).select();
+      const albumId = newAlbum?.[0]?.album_id;
+
+      if (songId && albumId) {
+        await supabase.from('album_songs').insert([{ song_id: songId, album_id: albumId }]);
+      }
+
+      const { data: artistData } = await supabase.from('artists').insert([{ name: release.artist }]).select();
+      const artistId = artistData?.[0]?.artist_id;
+      if (songId && artistId) {
+        await supabase.from('song_artists').insert([{ song_id: songId, artist_id: artistId }]);
+      }
+    } catch (e) {
+      console.warn('Error inserting release into Supabase:', e);
+    }
   };
 
   return (
     <AudioContext.Provider value={{
       currentTrack,
+      supabaseSongs,
+      supabaseArtists,
+      supabaseAlbums,
+      isLoadingData,
       isPlaying,
+      isRetrieving,
+      retrievalStatus,
       elapsed,
+      duration,
       volume,
       savedSongs,
       playlists,
@@ -116,7 +324,7 @@ export function AudioProvider({ children }) {
       playTrack,
       playNext,
       playPrevious,
-      setElapsed,
+      handleSeek,
       setVolume,
       toggleLike,
       createPlaylist,
@@ -125,6 +333,58 @@ export function AudioProvider({ children }) {
       {children}
     </AudioContext.Provider>
   );
+}
+
+// Helper: Generates a smooth audio tone buffer for synthetic fallback
+function createSyntheticAudioUrl() {
+  const sampleRate = 44100;
+  const numChannels = 1;
+  const numSamples = sampleRate * 12; // 12 seconds preview
+  const buffer = new Float32Array(numSamples);
+
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const freq = 220 + Math.sin(t * 2) * 40;
+    buffer[i] = Math.sin(2 * Math.PI * freq * t) * 0.15;
+  }
+
+  const wavBuffer = createWavBuffer(buffer, sampleRate, numChannels);
+  const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+  return URL.createObjectURL(blob);
+}
+
+function createWavBuffer(samples, sampleRate, numChannels) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  const writeString = (offset, string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numChannels * 2, true);
+  view.setUint16(32, numChannels * 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+
+  let offset = 44;
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    offset += 2;
+  }
+
+  return buffer;
 }
 
 export function useAudio() {
