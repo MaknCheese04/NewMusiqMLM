@@ -54,6 +54,8 @@ export function AudioProvider({ children }) {
   const [songRatings, setSongRatings] = useState({});
   const [ratingSaving, setRatingSaving] = useState(false);
   const [ratingError, setRatingError] = useState('');
+  const [songRatingTotals, setSongRatingTotals] = useState({});
+  const [songStreamTotals, setSongStreamTotals] = useState({});
   const [albumRatings, setAlbumRatings] = useState({});
   const [albumRatingTotals, setAlbumRatingTotals] = useState({});
   const [albumRatingSaving, setAlbumRatingSaving] = useState(null);
@@ -122,9 +124,27 @@ export function AudioProvider({ children }) {
   };
 
   const getTrackKey = (track) => {
-    const catalogSong = supabaseSongs.some(song => song.id === track.id && song.title === track.title);
+    const catalogSong = track.id != null && supabaseSongs.some(song => song.id === track.id && song.title === track.title);
     return catalogSong ? `song:${track.id}` : `demo:${track.title}:${track.artist}`;
   };
+
+  useEffect(() => {
+    if (!user?.id) {
+      setSongRatingTotals({});
+      setSongStreamTotals({});
+      return;
+    }
+    let active = true;
+    Promise.all([
+      supabase.from('song_rating_totals').select('track_key, rating_count, rating_sum'),
+      supabase.from('song_stream_totals').select('track_key, stream_count')
+    ]).then(([ratings, streams]) => {
+      if (!active) return;
+      if (!ratings.error) setSongRatingTotals(Object.fromEntries((ratings.data || []).map(row => [row.track_key, row])));
+      if (!streams.error) setSongStreamTotals(Object.fromEntries((streams.data || []).map(row => [row.track_key, row.stream_count])));
+    });
+    return () => { active = false; };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -172,6 +192,10 @@ export function AudioProvider({ children }) {
         return next;
       });
       setRatingError('Could not save your rating. Please try again.');
+    } else {
+      const { data } = await supabase.from('song_rating_totals')
+        .select('track_key, rating_count, rating_sum').eq('track_key', trackKey).single();
+      if (data) setSongRatingTotals(prev => ({ ...prev, [trackKey]: data }));
     }
     setRatingSaving(false);
   };
@@ -191,7 +215,7 @@ export function AudioProvider({ children }) {
               artists ( artist_id, name )
             ),
             album_songs (
-              albums ( album_id, name )
+              albums ( album_id, name, release_year, cover_url )
             )
           `);
 
@@ -203,7 +227,10 @@ export function AudioProvider({ children }) {
               id: s.song_id,
               title: s.name,
               artist: artistName,
+              artistIds: (s.song_artists || []).map(link => link.artists?.artist_id).filter(Boolean),
               album: albumName,
+              albumId: s.album_songs?.[0]?.albums?.album_id ?? null,
+              releaseYear: s.album_songs?.[0]?.albums?.release_year ?? null,
               art: defaultArts[idx % defaultArts.length],
               duration: 210 + (idx * 12) % 60
             };
@@ -279,6 +306,17 @@ export function AudioProvider({ children }) {
   }, [volume]);
 
   // Retrieve audio file from Supabase Storage bucket "songs" by `<song_id>.mp3`
+  const recordStream = async (track) => {
+    if (!user?.id) return;
+    const trackKey = getTrackKey(track);
+    const { error } = await supabase.from('song_streams').insert({
+      user_id: user.id,
+      track_key: trackKey,
+      song_id: trackKey.startsWith('song:') ? track.id : null
+    });
+    if (!error) setSongStreamTotals(prev => ({ ...prev, [trackKey]: Number(prev[trackKey] || 0) + 1 }));
+  };
+
   const retrieveAndPlay = async (track) => {
     const songId = track.id || 1;
     const fileName = `${songId}.mp3`;
@@ -290,6 +328,7 @@ export function AudioProvider({ children }) {
     try {
       // If track has a direct Blob URL (e.g. from session upload), use it directly
       let audioUrl = track.url || null;
+      let hasSongAudio = Boolean(audioUrl);
 
       if (!audioUrl) {
         // 1. Download file from Supabase Storage bucket 'songs'
@@ -309,6 +348,7 @@ export function AudioProvider({ children }) {
           }
           audioUrl = URL.createObjectURL(fileBlob);
           activeBlobUrlRef.current = audioUrl;
+          hasSongAudio = true;
         }
       }
 
@@ -332,6 +372,7 @@ export function AudioProvider({ children }) {
       // 4. Play song automatically after retrieval & buffering is 100% complete
       await audio.play();
       setIsPlaying(true);
+      if (hasSongAudio) void recordStream(track);
       setRetrievalStatus('');
     } catch (err) {
       console.error('Error during audio retrieval & playback:', err);
@@ -413,7 +454,7 @@ export function AudioProvider({ children }) {
       const { data: newSong } = await supabase.from('songs').insert([{ name: release.title }]).select();
       const songId = newSong?.[0]?.song_id;
 
-      const { data: newAlbum } = await supabase.from('albums').insert([{ name: release.album || 'Single' }]).select();
+      const { data: newAlbum } = await supabase.from('albums').insert([{ name: release.album || 'Single', release_year: new Date().getFullYear() }]).select();
       const albumId = newAlbum?.[0]?.album_id;
 
       if (songId && albumId) {
@@ -424,6 +465,9 @@ export function AudioProvider({ children }) {
       const artistId = artistData?.[0]?.artist_id;
       if (songId && artistId) {
         await supabase.from('song_artists').insert([{ song_id: songId, artist_id: artistId }]);
+      }
+      if (albumId && artistId) {
+        await supabase.from('album_artists').insert([{ album_id: albumId, artist_id: artistId, appearance: 'primary' }]);
       }
     } catch (e) {
       console.warn('Error inserting release into Supabase:', e);
@@ -436,6 +480,9 @@ export function AudioProvider({ children }) {
       supabaseSongs,
       supabaseArtists,
       supabaseAlbums,
+      songRatingTotals,
+      songStreamTotals,
+      getTrackKey,
       isLoadingData,
       isPlaying,
       isRetrieving,

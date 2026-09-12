@@ -9,6 +9,7 @@ import { HomePage } from './components/pages/HomePage';
 import { SearchPage } from './components/pages/SearchPage';
 import { ProfilePage } from './components/pages/ProfilePage';
 import { SettingsPage } from './components/pages/SettingsPage';
+import { ArtistPage } from './components/pages/ArtistPage';
 import { ArtistStudioModal } from './components/modals/ArtistStudioModal';
 import { EditProfileModal } from './components/modals/EditProfileModal';
 import './styles/index.css';
@@ -16,8 +17,17 @@ import './styles/index.css';
 function MainApp() {
   const { session, loading } = useAuth();
   const [activePage, setActivePage] = useState('home');
+  const [selectedArtist, setSelectedArtist] = useState(null);
+  const [previousPage, setPreviousPage] = useState('home');
   const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+
+  const openArtist = (name) => {
+    if (!name) return;
+    setPreviousPage(activePage === 'artist' ? previousPage : activePage);
+    setSelectedArtist(name);
+    setActivePage('artist');
+  };
 
   if (loading) {
     return null;
@@ -43,10 +53,11 @@ function MainApp() {
           onEditProfile={() => setIsEditProfileOpen(true)}
         />
 
-        {activePage === 'home' && <HomePage />}
-        {activePage === 'search' && <SearchPage onClose={() => setActivePage('home')} />}
-        {activePage === 'profile' && <ProfilePage onEditProfile={() => setIsEditProfileOpen(true)} />}
+        {activePage === 'home' && <HomePage onArtistSelect={openArtist} />}
+        {activePage === 'search' && <SearchPage onClose={() => setActivePage('home')} onArtistSelect={openArtist} />}
+        {activePage === 'profile' && <ProfilePage onEditProfile={() => setIsEditProfileOpen(true)} onArtistSelect={openArtist} />}
         {activePage === 'settings' && <SettingsPage />}
+        {activePage === 'artist' && selectedArtist && <ArtistPage artistName={selectedArtist} onBack={() => setActivePage(previousPage)} />}
       </main>
 
       <Player />

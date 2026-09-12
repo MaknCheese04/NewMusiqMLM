@@ -9,7 +9,7 @@ const artists = [
   ["June Harper", "Soul · 64K monthly listeners", "JH", "linear-gradient(135deg,#e19d56,#974565)"]
 ];
 
-export function ProfilePage({ onEditProfile }) {
+export function ProfilePage({ onEditProfile, onArtistSelect }) {
   const { profile, currentUser } = useAuth();
   const { savedSongs, playlists } = useAudio();
 
@@ -68,11 +68,11 @@ export function ProfilePage({ onEditProfile }) {
         <div className="artist-grid">
           {artists.map(([name, detail, avatar, art], idx) => (
             <article key={idx} className="artist-card">
-              <div className="artist-avatar" style={{ background: art }}>
+              <button className="artist-avatar" type="button" onClick={() => onArtistSelect(name)} aria-label={`Open ${name}'s artist page`} style={{ background: art }}>
                 {avatar}
-              </div>
+              </button>
               <div>
-                <h3>{name}</h3>
+                <h3><button type="button" onClick={() => onArtistSelect(name)}>{name}</button></h3>
                 <p>{detail}</p>
               </div>
               <button className="following">Following</button>
