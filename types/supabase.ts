@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       album_artists: {
@@ -209,7 +184,7 @@ export type Database = {
           created_at?: string
           name: string
           playlist_id?: number
-          user_id: string
+          user_id?: string
         }
         Update: {
           created_at?: string
@@ -218,6 +193,42 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      song_artists: {
+        Row: {
+          artist_id: number
+          created_at: string
+          id: number
+          song_id: number
+        }
+        Insert: {
+          artist_id: number
+          created_at?: string
+          id?: number
+          song_id: number
+        }
+        Update: {
+          artist_id?: number
+          created_at?: string
+          id?: number
+          song_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_artists_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["artist_id"]
+          },
+          {
+            foreignKeyName: "song_artists_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["song_id"]
+          },
+        ]
       }
       songs: {
         Row: {
@@ -371,9 +382,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
