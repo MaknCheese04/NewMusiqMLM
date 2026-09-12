@@ -1,0 +1,7 @@
+{
+  "name": "soundwave",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  }
+}
