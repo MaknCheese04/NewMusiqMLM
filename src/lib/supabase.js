@@ -15,11 +15,11 @@ const noopLock = async (name, acquireTimeout, fn) => {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    flowType: 'pkce',
+    flowType: 'implicit',
     storage: safeStorage,
     persistSession: true,
     autoRefreshToken: false,
-    detectSessionInUrl: false,
+    detectSessionInUrl: true,
     lock: noopLock
   }
 });

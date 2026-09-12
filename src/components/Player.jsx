@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAudio } from '../context/AudioContext';
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart, Volume2, Loader2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart, Volume2, Loader2, Star } from 'lucide-react';
 
 export function Player() {
   const {
@@ -12,6 +12,10 @@ export function Player() {
     duration,
     volume,
     savedSongs,
+    currentRating,
+    ratingSaving,
+    ratingError,
+    rateTrack,
     togglePlay,
     playNext,
     playPrevious,
@@ -102,16 +106,27 @@ export function Player() {
       </div>
 
       <div className="player-options">
-        <Volume2 size={18} />
-        <input
-          type="range"
-          className="range-slider"
-          style={{ width: '100px' }}
-          min={0}
-          max={100}
-          value={volume}
-          onChange={(e) => setVolume(Number(e.target.value))}
-        />
+        <div className="song-rating" aria-label="Rate this song from 0 to 5 stars">
+          <span className="song-rating-label">Your rating: {currentRating === null ? 'Not rated' : `${currentRating}/5`}</span>
+          <div className="song-rating-buttons">
+            <button type="button" className={`rating-zero ${currentRating === 0 ? 'selected' : ''}`}
+              onClick={() => rateTrack(currentTrack, 0)} disabled={ratingSaving}
+              aria-label="Rate 0 out of 5 stars" aria-pressed={currentRating === 0}>0</button>
+            {[1, 2, 3, 4, 5].map(stars => (
+              <button type="button" key={stars} onClick={() => rateTrack(currentTrack, stars)}
+                disabled={ratingSaving} aria-label={`Rate ${stars} out of 5 stars`}
+                aria-pressed={currentRating === stars}>
+                <Star size={18} fill={currentRating !== null && stars <= currentRating ? 'currentColor' : 'none'} />
+              </button>
+            ))}
+          </div>
+          {ratingError && <span className="song-rating-error" role="alert">{ratingError}</span>}
+        </div>
+        <div className="volume-control">
+          <Volume2 size={18} />
+          <input type="range" className="range-slider" min={0} max={100} value={volume}
+            aria-label="Volume" onChange={(e) => setVolume(Number(e.target.value))} />
+        </div>
       </div>
     </footer>
   );

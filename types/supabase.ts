@@ -50,6 +50,56 @@ export type Database = {
           },
         ]
       }
+      album_rating_totals: {
+        Row: {
+          album_key: string
+          rating_count: number
+          rating_sum: number
+        }
+        Insert: {
+          album_key: string
+          rating_count: number
+          rating_sum: number
+        }
+        Update: {
+          album_key?: string
+          rating_count?: number
+          rating_sum?: number
+        }
+        Relationships: []
+      }
+      album_ratings: {
+        Row: {
+          album_id: number | null
+          album_key: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          album_id?: number | null
+          album_key: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          album_id?: number | null
+          album_key?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_ratings_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["album_id"]
+          },
+        ]
+      }
       album_songs: {
         Row: {
           album_id: number | null
@@ -223,6 +273,38 @@ export type Database = {
           },
           {
             foreignKeyName: "song_artists_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["song_id"]
+          },
+        ]
+      }
+      song_ratings: {
+        Row: {
+          rating: number
+          song_id: number | null
+          track_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          rating: number
+          song_id?: number | null
+          track_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          rating?: number
+          song_id?: number | null
+          track_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_ratings_song_id_fkey"
             columns: ["song_id"]
             isOneToOne: false
             referencedRelation: "songs"
