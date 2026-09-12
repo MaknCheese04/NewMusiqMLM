@@ -18,18 +18,21 @@ export type Database = {
         Row: {
           album_artist_id: number
           album_id: number | null
+          appearance: string
           artist_id: number | null
           created_at: string
         }
         Insert: {
           album_artist_id?: number
           album_id?: number | null
+          appearance?: string
           artist_id?: number | null
           created_at?: string
         }
         Update: {
           album_artist_id?: number
           album_id?: number | null
+          appearance?: string
           artist_id?: number | null
           created_at?: string
         }
@@ -139,36 +142,57 @@ export type Database = {
       albums: {
         Row: {
           album_id: number
+          cover_url: string | null
           created_at: string
           name: string
+          release_year: number | null
         }
         Insert: {
           album_id?: number
+          cover_url?: string | null
           created_at?: string
           name: string
+          release_year?: number | null
         }
         Update: {
           album_id?: number
+          cover_url?: string | null
           created_at?: string
           name?: string
+          release_year?: number | null
         }
         Relationships: []
       }
       artists: {
         Row: {
           artist_id: number
+          artwork_url: string | null
+          career: string | null
           created_at: string
           name: string
+          personality: string | null
+          portrait_url: string | null
+          tagline: string | null
         }
         Insert: {
           artist_id?: number
+          artwork_url?: string | null
+          career?: string | null
           created_at?: string
           name: string
+          personality?: string | null
+          portrait_url?: string | null
+          tagline?: string | null
         }
         Update: {
           artist_id?: number
+          artwork_url?: string | null
+          career?: string | null
           created_at?: string
           name?: string
+          personality?: string | null
+          portrait_url?: string | null
+          tagline?: string | null
         }
         Relationships: []
       }
@@ -280,6 +304,24 @@ export type Database = {
           },
         ]
       }
+      song_rating_totals: {
+        Row: {
+          rating_count: number
+          rating_sum: number
+          track_key: string
+        }
+        Insert: {
+          rating_count: number
+          rating_sum: number
+          track_key: string
+        }
+        Update: {
+          rating_count?: number
+          rating_sum?: number
+          track_key?: string
+        }
+        Relationships: []
+      }
       song_ratings: {
         Row: {
           rating: number
@@ -305,6 +347,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "song_ratings_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["song_id"]
+          },
+        ]
+      }
+      song_stream_totals: {
+        Row: {
+          stream_count: number
+          track_key: string
+        }
+        Insert: {
+          stream_count?: number
+          track_key: string
+        }
+        Update: {
+          stream_count?: number
+          track_key?: string
+        }
+        Relationships: []
+      }
+      song_streams: {
+        Row: {
+          song_id: number | null
+          stream_id: number
+          streamed_at: string
+          track_key: string
+          user_id: string | null
+        }
+        Insert: {
+          song_id?: number | null
+          stream_id?: number
+          streamed_at?: string
+          track_key: string
+          user_id?: string | null
+        }
+        Update: {
+          song_id?: number | null
+          stream_id?: number
+          streamed_at?: string
+          track_key?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_streams_song_id_fkey"
             columns: ["song_id"]
             isOneToOne: false
             referencedRelation: "songs"

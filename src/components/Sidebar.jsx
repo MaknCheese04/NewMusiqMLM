@@ -23,7 +23,7 @@ export function Sidebar({ activePage, setActivePage, onOpenStudio }) {
     <aside className="sidebar">
       <a className="brand" href="#" onClick={() => setActivePage('home')}>
         <span className="brand-mark">◒</span>
-        <span>soundwave</span>
+        <span>NewMusiq</span>
       </a>
 
       <nav className="main-nav" aria-label="Main navigation">

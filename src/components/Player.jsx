@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAudio } from '../context/AudioContext';
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart, Volume2, Loader2, Star } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart, Volume2, Loader2, Star, CircleOff } from 'lucide-react';
 
 export function Player() {
   const {
@@ -107,11 +107,11 @@ export function Player() {
 
       <div className="player-options">
         <div className="song-rating" aria-label="Rate this song from 0 to 5 stars">
-          <span className="song-rating-label">Your rating: {currentRating === null ? 'Not rated' : `${currentRating}/5`}</span>
+          <span className="song-rating-label" role="status">{currentRating === null ? 'Not rated' : `${currentRating}/5`}</span>
           <div className="song-rating-buttons">
             <button type="button" className={`rating-zero ${currentRating === 0 ? 'selected' : ''}`}
               onClick={() => rateTrack(currentTrack, 0)} disabled={ratingSaving}
-              aria-label="Rate 0 out of 5 stars" aria-pressed={currentRating === 0}>0</button>
+              aria-label="Rate 0 out of 5 stars" aria-pressed={currentRating === 0}><CircleOff size={17} /></button>
             {[1, 2, 3, 4, 5].map(stars => (
               <button type="button" key={stars} onClick={() => rateTrack(currentTrack, stars)}
                 disabled={ratingSaving} aria-label={`Rate ${stars} out of 5 stars`}

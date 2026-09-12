@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import '../../src/styles/index.css';
 
 export function AuthScreen() {
   const { login, register } = useAuth();
@@ -42,9 +41,12 @@ export function AuthScreen() {
   return (
     <section className="auth-screen" aria-label="Account access">
       <div className="auth-panel">
-        <a className="brand" href="#">
-          <span className="brand-mark">◒</span>
-          <span>soundwave</span>
+        <a className="brand auth-brand" href="#" aria-label="NewMusiq home">
+          <span className="auth-brand-title">NewMusiq
+            <svg className="auth-title-wave" viewBox="0 0 460 52" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M0 27C23 4 45 49 68 27S113 4 136 27s45 23 68 0 45-23 68 0 45 23 68 0 45-23 68 0 45 23 68 0" />
+            </svg>
+          </span>
         </a>
 
         <div className="auth-copy">
@@ -138,7 +140,7 @@ export function AuthScreen() {
           </button>
 
           <p className="auth-switch">
-            {isRegistering ? 'Already have an account?' : 'New to soundwave?'}{' '}
+            {isRegistering ? 'Already have an account?' : 'New to NewMusiq?'}{' '}
             <button
               type="button"
               onClick={() => {
@@ -157,14 +159,11 @@ export function AuthScreen() {
       </div>
 
       <div className="auth-art">
-        <div className="auth-vinyl">
-          <span>SW</span>
-        </div>
-        <div className="auth-orb one"></div>
-        <div className="auth-orb two"></div>
+        <div className="auth-vinyl gold"><span>GOLD</span></div>
+        <div className="auth-vinyl platinum"><span>PLATINUM</span></div>
+        <div className="auth-vinyl diamond"><span>DIAMOND</span></div>
         <p>
-          Every listener has a sound.<br />
-          <strong>Every artist has a stage.</strong>
+              New Music Everyday
         </p>
       </div>
     </section>

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAudio } from '../../context/AudioContext';
-import { Play, Pause, Loader2, Star } from 'lucide-react';
+import { Play, Pause, Loader2, Star, CircleOff } from 'lucide-react';
+import { getArtistColors, getArtistProfile } from '../../data/artistProfiles';
 
 const quick = [
   ["Night drives", "linear-gradient(135deg,#2a235e,#ea7c9c)"],
@@ -11,10 +12,11 @@ const quick = [
   ["Late night jazz", "linear-gradient(135deg,#1c293d,#ba6684)"]
 ];
 
-export function HomePage() {
+export function HomePage({ onArtistSelect }) {
+  const [revealedAlbumKey, setRevealedAlbumKey] = useState(null);
   const {
     isPlaying, isRetrieving, retrievalStatus, togglePlay, playTrack, currentTrack,
-    supabaseSongs, supabaseAlbums, isLoadingData, albumRatings, albumRatingTotals,
+    supabaseSongs, supabaseArtists, supabaseAlbums, isLoadingData, albumRatings, albumRatingTotals,
     albumRatingSaving, albumRatingError, getAlbumKey, rateAlbum
   } = useAudio();
 
@@ -29,6 +31,9 @@ export function HomePage() {
         `${track.album}:${track.artist}`,
         { name: track.album, artist: track.artist, art: track.art }
       ])).values()];
+  const displayArtists = supabaseArtists.length
+    ? supabaseArtists.map(artist => artist.name)
+    : ['Luna Vale', 'The Violets', 'Milo Sun', 'June Harper'];
 
   return (
     <div className="home-page">
@@ -39,7 +44,7 @@ export function HomePage() {
             Find your next<br />
             <em>favorite sound.</em>
           </h1>
-          <p className="subhead">Music that moves with your moment.</p>
+          <p className="subhead">New Music Everyday</p>
           <button className="btn-play-hero" onClick={togglePlay} disabled={isRetrieving}>
             {isRetrieving ? (
               <>
@@ -107,8 +112,28 @@ export function HomePage() {
                   </div>
                 </div>
                 <h3>{track.title}</h3>
-                <p>{track.artist} · <em>{track.album}</em></p>
+                <p><button className="artist-name-link" type="button" onClick={(event) => {
+                  event.stopPropagation();
+                  onArtistSelect(track.artist);
+                }}>{track.artist}</button> · <em>{track.album}</em></p>
               </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="section-container">
+        <div className="section-header"><div><h2>Artists</h2><p>Meet the people behind the music.</p></div></div>
+        <div className="home-artists-grid">
+          {displayArtists.map(name => {
+            const colors = getArtistColors(name, getArtistProfile(name));
+            return (
+              <button type="button" className="home-artist-card" key={name} onClick={() => onArtistSelect(name)}>
+                <span className="home-artist-art" style={{ background: `linear-gradient(145deg, ${colors[0]}, ${colors[1]}, ${colors[2]})` }}>
+                  {name.split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase()}
+                </span>
+                <strong>{name}</strong><span>Artist page →</span>
+              </button>
             );
           })}
         </div>
@@ -136,7 +161,7 @@ export function HomePage() {
                 <div className="album-rating-controls" aria-label={`Rate ${album.name} from 0 to 5 stars`}>
                   <button type="button" className={yourRating === 0 ? 'selected' : ''}
                     onClick={() => rateAlbum(album, 0)} disabled={Boolean(albumRatingSaving)}
-                    aria-label={`Rate ${album.name} 0 out of 5 stars`} aria-pressed={yourRating === 0}>0</button>
+                    aria-label={`Rate ${album.name} 0 out of 5 stars`} aria-pressed={yourRating === 0}><CircleOff size={17} /></button>
                   {[1, 2, 3, 4, 5].map(stars => (
                     <button type="button" key={stars} onClick={() => rateAlbum(album, stars)}
                       disabled={Boolean(albumRatingSaving)} aria-label={`Rate ${album.name} ${stars} out of 5 stars`}
@@ -144,12 +169,21 @@ export function HomePage() {
                       <Star size={19} fill={yourRating !== null && stars <= yourRating ? 'currentColor' : 'none'} />
                     </button>
                   ))}
+                  <button type="button" className="album-rating-info"
+                    onClick={() => setRevealedAlbumKey(prev => prev === albumKey ? null : albumKey)}
+                    disabled={yourRating === null}
+                    aria-label={`Show average rating for ${album.name}`}
+                    aria-expanded={revealedAlbumKey === albumKey}>
+                    <span className="album-rating-dot" />
+                  </button>
+                  {yourRating !== null && (
+                    <span className={`album-rating-popover ${revealedAlbumKey === albumKey ? 'revealed' : ''}`}>
+                      {isSaving ? 'Saving rating…' : totals?.rating_count
+                        ? `${yourRating}/5 · Listener average ${(totals.rating_sum / totals.rating_count).toFixed(1)}/5`
+                        : `${yourRating}/5 · Loading average…`}
+                    </span>
+                  )}
                 </div>
-                <p className="album-rating-summary">
-                  {isSaving ? 'Saving…' : yourRating === null ? 'Rate to see the listener average' :
-                    totals?.rating_count ? `Your rating: ${yourRating}/5 · Average: ${(totals.rating_sum / totals.rating_count).toFixed(1)}/5 (${totals.rating_count} ${totals.rating_count === 1 ? 'listener' : 'listeners'})`
-                      : `Your rating: ${yourRating}/5 · Loading average…`}
-                </p>
               </article>
             );
           })}

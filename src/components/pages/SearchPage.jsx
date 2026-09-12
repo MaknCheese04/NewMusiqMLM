@@ -25,7 +25,7 @@ const searchIndex = [
   { name: 'Daylight', detail: 'An easy, uplifting mix', type: 'Playlist', art: 'linear-gradient(135deg,#f8be70,#e37d6c)' }
 ];
 
-export function SearchPage({ onClose }) {
+export function SearchPage({ onClose, onArtistSelect }) {
   const { playTrack } = useAudio();
   const [query, setQuery] = useState('');
   const [history, setHistory] = useState(() => {
@@ -146,7 +146,8 @@ export function SearchPage({ onClose }) {
                 className="search-result"
                 onClick={() => {
                   handleSaveSearch(item.name);
-                  playTrack({ title: item.name, artist: item.detail, art: item.art || 'linear-gradient(135deg,#7264e9,#e990b5)' });
+                  if (item.type === 'Artist') onArtistSelect(item.name);
+                  else playTrack({ title: item.name, artist: item.detail, art: item.art || 'linear-gradient(135deg,#7264e9,#e990b5)' });
                 }}
                 style={{
                   display: 'flex',
