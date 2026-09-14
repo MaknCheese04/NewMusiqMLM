@@ -174,7 +174,7 @@ export function HomePage({ onArtistSelect }) {
                     disabled={yourRating === null}
                     aria-label={`Show average rating for ${album.name}`}
                     aria-expanded={revealedAlbumKey === albumKey}>
-                    <span className="album-rating-dot" />
+                    <span className="album-rating-slash" aria-hidden="true">/</span>
                   </button>
                   {yourRating !== null && (
                     <span className={`album-rating-popover ${revealedAlbumKey === albumKey ? 'revealed' : ''}`}>

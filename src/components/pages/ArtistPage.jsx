@@ -226,7 +226,7 @@ export function ArtistPage({ artistName, onBack }) {
               ))}
               <button type="button" className="album-rating-info" disabled={selectedRating === null}
                 onClick={() => setShowAlbumRating(value => !value)} aria-expanded={showAlbumRating}
-                aria-label={`Show average rating for ${selectedAlbum.name}`}><span className="album-rating-dot" /></button>
+                aria-label={`Show average rating for ${selectedAlbum.name}`}><span className="album-rating-slash" aria-hidden="true">/</span></button>
               {selectedRating !== null && <span className={`album-rating-popover ${showAlbumRating ? 'revealed' : ''}`}>
                 {albumRatingSaving === getAlbumKey(selectedAlbum) ? 'Saving rating…' : selectedTotal?.rating_count
                   ? `${selectedRating}/5 · Listener average ${(selectedTotal.rating_sum / selectedTotal.rating_count).toFixed(1)}/5`

@@ -1088,7 +1088,7 @@ input, textarea, select {
 .album-rating-controls button:has(svg[fill="currentColor"]) { color: #e5a33c; }
 .album-rating-controls button:disabled { cursor: wait; }
 .album-rating-controls .album-rating-info { margin-left: 1px; width: 24px; height: 28px; }
-.album-rating-dot { display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--color-primary); }
+.album-rating-slash { display: block; color: var(--color-primary); font: 800 22px/1 var(--font-display); transform: rotate(-12deg); }
 .album-rating-info:disabled { opacity: 0.4; }
 .album-rating-popover { position: absolute; left: 0; top: calc(100% + 6px); z-index: 2; padding: 7px 10px; border-radius: 8px; background: #2a2546; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; opacity: 0; visibility: hidden; pointer-events: none; box-shadow: var(--shadow-md); }
 .album-rating-popover.revealed { opacity: 1; visibility: visible; }
