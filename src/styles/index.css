@@ -1415,7 +1415,7 @@ input, textarea, select {
 .auth-panel .auth-brand { display: inline-block; position: relative; margin-bottom: 48px; }
 .auth-brand-title { display: inline-block; position: relative; font: 800 clamp(45px, 5vw, 76px)/1 var(--font-display); letter-spacing: -.07em; background: linear-gradient(105deg, #614414 0%, #986a27 28%, #c69b50 44%, #80571e 60%, #a8782f 78%, #624518 100%); background-size: 220% 100%; background-clip: text; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 0 8px rgba(160, 111, 34, .3)); animation: titleShine 8s ease-in-out infinite alternate; }
 .auth-title-wave { position: absolute; left: -2%; top: 39%; width: 104%; height: 30%; overflow: visible; }
-.auth-title-wave path { fill: none; stroke: #fff0b5; stroke-width: 2.4; stroke-linecap: round; filter: drop-shadow(0 0 5px #e2b960); opacity: .82; }
+.auth-title-wave path { fill: none; stroke: #f7d98d; stroke-width: 1.8; stroke-linecap: square; stroke-linejoin: miter; filter: drop-shadow(0 0 5px #e2b960); opacity: 1; }
 @keyframes titleShine { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
 .auth-copy .eyebrow { color: #d8b56e; }
 .auth-copy h1 { color: #f9f3e8 !important; }

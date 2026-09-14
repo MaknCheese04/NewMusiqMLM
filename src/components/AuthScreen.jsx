@@ -51,7 +51,7 @@ export function AuthScreen() {
 
         <div className="auth-copy">
           <p className="eyebrow">YOUR MUSIC HOME</p>
-          <h1>{isRegistering ? 'Make it yours' : 'Welcome back'}</h1>
+          <h1>{isRegistering ? 'Make it yours' : 'yo bro'}</h1>
           <p>
             {isRegistering
               ? role === 'artist'
