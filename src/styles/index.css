@@ -1382,8 +1382,8 @@ input, textarea, select {
 :root[data-theme="dark"] .card-play-btn svg,
 :root[data-theme="dark"] .btn-main-play svg { color: #14100a !important; fill: #14100a !important; }
 :root[data-theme="dark"] .btn-main-play:hover { background: var(--color-primary-hover); }
-:root[data-theme="dark"] .hero { background: linear-gradient(125deg, rgba(1,2,3,.88), rgba(8,9,11,.84)), url('../assets/waves-dark.svg') center / cover; border: 1px solid var(--color-gold); }
-:root[data-theme="light"] .hero { background: linear-gradient(125deg, rgba(255,255,255,.78), rgba(218,237,253,.72)), url('../assets/waves-light.svg') center / cover; border: 1px solid var(--color-gold); }
+:root[data-theme="dark"] .home-page .hero { background: linear-gradient(90deg, rgba(3,4,5,.98) 0%, rgba(3,4,5,.9) 34%, rgba(3,4,5,.12) 100%), url('../assets/soundwave-dark.svg') center / cover; border: 1px solid var(--color-gold); }
+:root[data-theme="light"] .home-page .hero { background: linear-gradient(90deg, rgba(248,252,255,.97) 0%, rgba(248,252,255,.88) 34%, rgba(248,252,255,.06) 100%), url('../assets/soundwave-light.svg') center / cover; border: 1px solid var(--color-gold); }
 :root[data-theme="dark"] .hero h1,
 :root[data-theme="dark"] .hero .subhead { color: var(--color-text); }
 :root[data-theme="dark"] .profile-cover { background: linear-gradient(110deg, #070a0f, #26354a 55%, #8e6d36); }
