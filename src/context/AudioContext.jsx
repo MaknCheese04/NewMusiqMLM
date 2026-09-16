@@ -210,6 +210,7 @@ export function AudioProvider({ children }) {
           .select(`
             song_id,
             name,
+            lyrics,
             created_at,
             song_artists (
               artists ( artist_id, name )
@@ -226,6 +227,7 @@ export function AudioProvider({ children }) {
             return {
               id: s.song_id,
               title: s.name,
+              lyrics: s.lyrics,
               artist: artistName,
               artistIds: (s.song_artists || []).map(link => link.artists?.artist_id).filter(Boolean),
               album: albumName,
@@ -451,7 +453,7 @@ export function AudioProvider({ children }) {
     setSupabaseSongs(prev => [release, ...prev]);
 
     try {
-      const { data: newSong } = await supabase.from('songs').insert([{ name: release.title }]).select();
+      const { data: newSong } = await supabase.from('songs').insert([{ name: release.title, lyrics: release.lyrics || null }]).select();
       const songId = newSong?.[0]?.song_id;
 
       const { data: newAlbum } = await supabase.from('albums').insert([{ name: release.album || 'Single', release_year: new Date().getFullYear() }]).select();

@@ -948,6 +948,44 @@ input, textarea, select {
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
 }
 
+.player-expand { position: absolute; left: 50%; top: -31px; transform: translateX(-50%); display: flex; align-items: center; gap: 5px; padding: 5px 13px; border: 1px solid var(--color-border); border-bottom: 0; border-radius: 12px 12px 0 0; background: var(--bg-card); color: var(--color-text); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.player-expand:hover { color: var(--color-primary); }
+.player-panel-backdrop { position: fixed; inset: 0; z-index: 98; background: rgba(14, 12, 25, .42); }
+.player-panel { position: fixed; z-index: 99; left: 0; right: 0; bottom: 88px; height: min(640px, calc(100dvh - 120px)); padding: 28px clamp(20px, 5vw, 72px); background: var(--bg-card); color: var(--color-text); border-top: 1px solid var(--color-border); border-radius: 22px 22px 0 0; box-shadow: 0 -14px 35px rgba(0,0,0,.13); transform: translateY(calc(100% + 100px)); visibility: hidden; transition: transform .3s ease, visibility .3s; display: flex; flex-direction: column; gap: 22px; }
+.player-panel.open { transform: translateY(0); visibility: visible; }
+.player-panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.player-panel-header h2 { font: 800 clamp(25px, 3vw, 38px)/1.1 var(--font-display); margin: 4px 0; }
+.player-panel-header p { color: var(--color-text-muted); font-size: 13px; }
+.player-panel-header button { color: var(--color-text); padding: 8px; border-radius: 50%; }
+.player-panel-header button:hover { background: var(--bg-surface-hover); }
+.player-panel-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; min-height: 0; flex: 1; }
+.player-detail-column { display: flex; flex-direction: column; min-height: 0; padding: 22px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--bg-app); }
+.player-detail-column h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 18px; font: 700 20px var(--font-display); }
+.player-detail-column h3 span { font: 600 12px var(--font-primary); color: var(--color-text-muted); }
+.comment-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.comment-form label { font-size: 12px; font-weight: 700; }
+.comment-form textarea { min-height: 72px; resize: vertical; padding: 10px; border: 1px solid var(--color-border); border-radius: 9px; background: var(--bg-card); color: var(--color-text); font: inherit; }
+.comment-form button { align-self: flex-end; padding: 8px 13px; border-radius: 8px; background: var(--color-primary); color: #fff; font-size: 12px; font-weight: 700; }
+.comment-form button:disabled { opacity: .5; cursor: default; }
+.comments-list, .lyrics-list { min-height: 0; overflow-y: auto; }
+.song-comment { border-top: 1px solid var(--color-border); padding: 13px 0; }
+.song-comment > div { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+.song-comment time { color: var(--color-text-muted); }
+.song-comment p { margin: 6px 0 0; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.lyrics-list p { margin: 0 0 18px; font: 600 clamp(16px, 2vw, 22px)/1.35 var(--font-display); color: var(--color-text-muted); transition: color .2s; }
+.lyrics-list p.active { color: var(--color-primary); }
+.player-detail-empty { color: var(--color-text-muted) !important; font: 400 13px/1.5 var(--font-primary) !important; }
+.player-detail-error { color: #b63e4b; font-size: 12px; margin-bottom: 10px; }
+@media (max-width: 700px) {
+  .player-panel { bottom: 124px; height: calc(100dvh - 150px); padding: 18px 14px; gap: 12px; }
+  .player-panel-columns { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .player-detail-column { padding: 14px; }
+  .player-detail-column h3 { margin-bottom: 9px; font-size: 17px; }
+  .comment-form { margin-bottom: 8px; }
+  .comment-form textarea { min-height: 42px; }
+}
+@media (prefers-reduced-motion: reduce) { .player-panel { transition: none; } }
+
 .now-playing {
   display: flex;
   align-items: center;

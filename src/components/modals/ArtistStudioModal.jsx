@@ -15,6 +15,7 @@ export function ArtistStudioModal({ onClose }) {
   const [title, setTitle] = useState('');
   const [album, setAlbum] = useState('');
   const [genre, setGenre] = useState('');
+  const [lyrics, setLyrics] = useState('');
   const [audioFile, setAudioFile] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [status, setStatus] = useState('');
@@ -30,6 +31,7 @@ export function ArtistStudioModal({ onClose }) {
       title,
       album: album || 'Single',
       genre,
+      lyrics,
       artist: currentUser?.artistName || currentUser?.name || 'Independent Artist',
       url: audioUrl,
       art: coverUrl ? `url(${coverUrl})` : 'linear-gradient(135deg,#7264e9,#e990b5)',
@@ -41,6 +43,7 @@ export function ArtistStudioModal({ onClose }) {
     setTitle('');
     setAlbum('');
     setGenre('');
+    setLyrics('');
     setAudioFile(null);
     setCoverFile(null);
   };
@@ -96,6 +99,11 @@ export function ArtistStudioModal({ onClose }) {
                 <option key={i} value={g} />
               ))}
             </datalist>
+          </div>
+
+          <div className="form-group">
+            <label>Lyrics <small style={{ fontWeight: 400, color: '#77798b' }}>(optional; use [mm:ss] before lines to sync them)</small></label>
+            <textarea rows={5} value={lyrics} onChange={(e) => setLyrics(e.target.value)} placeholder={'[00:12] First line\n[00:18] Next line'} />
           </div>
 
           <div className="form-group">
