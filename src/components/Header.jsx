@@ -29,7 +29,7 @@ export function Header({ activePage, setActivePage, onOpenSettings, onEditProfil
             Edit profile
           </button>
         ) : (
-          <button className="btn-upgrade">Explore Premium</button>
+          <button className="btn-upgrade btn-premium">Explore Premium</button>
         )}
 
         <button className="history-nav button" style={{ borderRadius: '50%', width: '32px', height: '32px', border: '1px solid #eceaf1', display: 'grid', placeItems: 'center' }}>

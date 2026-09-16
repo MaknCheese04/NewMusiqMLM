@@ -516,6 +516,18 @@ input, textarea, select {
   background: #000;
 }
 
+.btn-premium,
+.btn-premium:hover {
+  background: #050505;
+  color: #e8c478;
+  border: 1px solid var(--color-gold);
+}
+
+.btn-premium:hover {
+  border-color: #f2d28c;
+  box-shadow: 0 4px 16px rgba(184, 141, 67, .28);
+}
+
 /* Hero Section */
 .hero {
   margin: 0 48px 36px;
