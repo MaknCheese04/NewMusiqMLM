@@ -109,6 +109,7 @@ export function Player() {
   return (
     <>
     {expanded && <div className="player-panel-backdrop" onClick={() => setExpanded(false)} aria-hidden="true" />}
+    <div className={`player-surface ${expanded ? 'open' : ''}`}>
     <section className={`player-panel ${expanded ? 'open' : ''}`} aria-label="Now playing details" aria-hidden={!expanded}>
       <div className="player-panel-header">
         <div><span className="eyebrow">NOW PLAYING</span><h2>{currentTrack.title}</h2><p>{currentTrack.artist}</p></div>
@@ -237,6 +238,7 @@ export function Player() {
         </div>
       </div>
     </footer>
+    </div>
     </>
   );
 }
