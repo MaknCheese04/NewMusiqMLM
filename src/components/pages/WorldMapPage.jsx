@@ -34,6 +34,8 @@ export function WorldMapPage() {
       scrollWheelZoom: true
     }).setView([17, 0], 2);
     mapRef.current = map;
+    const sizeObserver = new ResizeObserver(() => map.invalidateSize({ pan: false }));
+    sizeObserver.observe(containerRef.current);
     L.DomEvent.disableClickPropagation(zoomPanelRef.current);
     L.DomEvent.disableScrollPropagation(zoomPanelRef.current);
 
@@ -103,6 +105,7 @@ export function WorldMapPage() {
     map.on('dblclick', zoomToPoint);
 
     return () => {
+      sizeObserver.disconnect();
       map.off('zoomend', updateLayers);
       map.off('click', choosePoint);
       map.off('dblclick', zoomToPoint);

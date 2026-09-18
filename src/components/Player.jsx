@@ -13,7 +13,7 @@ function parseLyrics(lyrics) {
   });
 }
 
-export function Player() {
+export function Player({ mapSide = false }) {
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [comments, setComments] = useState([]);
@@ -23,6 +23,7 @@ export function Player() {
   const [commentError, setCommentError] = useState('');
   const touchStart = useRef(null);
   const lyricsListRef = useRef(null);
+  useEffect(() => { setExpanded(false); }, [mapSide]);
   const {
     currentTrack,
     isPlaying,
@@ -108,8 +109,8 @@ export function Player() {
 
   return (
     <>
-    {expanded && <div className="player-panel-backdrop" onClick={() => setExpanded(false)} aria-hidden="true" />}
-    <div className={`player-surface ${expanded ? 'open' : ''}`}>
+    {expanded && !mapSide && <div className="player-panel-backdrop" onClick={() => setExpanded(false)} aria-hidden="true" />}
+    <div className={`player-surface ${expanded ? 'open' : ''} ${mapSide ? 'map-side' : ''}`}>
     <section className={`player-panel ${expanded ? 'open' : ''}`} aria-label="Now playing details" aria-hidden={!expanded}>
       <div className="player-panel-header">
         <div><span className="eyebrow">NOW PLAYING</span><h2>{currentTrack.title}</h2><p>{currentTrack.artist}</p></div>

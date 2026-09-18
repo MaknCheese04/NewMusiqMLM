@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AudioProvider } from './context/AudioContext';
 import { AuthScreen } from './components/AuthScreen';
@@ -23,6 +23,15 @@ function MainApp({ theme, setTheme }) {
   const [previousPage, setPreviousPage] = useState('home');
   const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [wideLayout, setWideLayout] = useState(() => window.matchMedia('(min-width: 1100px)').matches);
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1100px)');
+    const updateLayout = () => setWideLayout(media.matches);
+    media.addEventListener('change', updateLayout);
+    return () => media.removeEventListener('change', updateLayout);
+  }, []);
+  const mapSide = activePage === 'world-map' && wideLayout;
 
   const openArtist = (name) => {
     if (!name) return;
@@ -40,7 +49,7 @@ function MainApp({ theme, setTheme }) {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${mapSide ? 'map-layout' : ''}`}>
       <Sidebar
         activePage={activePage}
         setActivePage={setActivePage}
@@ -63,7 +72,7 @@ function MainApp({ theme, setTheme }) {
         {activePage === 'artist' && selectedArtist && <ArtistPage artistName={selectedArtist} onBack={() => setActivePage(previousPage)} />}
       </main>
 
-      <Player />
+      <Player mapSide={mapSide} />
 
       {isStudioOpen && (
         <ArtistStudioModal onClose={() => setIsStudioOpen(false)} />
