@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Globe2 } from 'lucide-react';
 import * as L from '../../vendor/leaflet/leaflet-src.esm.js';
 import '../../vendor/leaflet/leaflet.css';
-import earthAtNight from '../../assets/earth-at-night-nasa.jpg';
+import earthAtNight from '../../assets/earth-at-night-mercator.jpg';
 
 const regions = [
   { name: 'North America', center: [39, -98] },
@@ -12,6 +12,7 @@ const regions = [
   { name: 'Asia', center: [34, 100] },
   { name: 'Oceania', center: [-25, 134] }
 ];
+const worldBounds = [[-85.05112878, -180], [85.05112878, 180]];
 
 export function WorldMapPage() {
   const containerRef = useRef(null);
@@ -28,7 +29,8 @@ export function WorldMapPage() {
       maxZoom: 19,
       zoomControl: false,
       doubleClickZoom: false,
-      worldCopyJump: true,
+      maxBounds: worldBounds,
+      maxBoundsViscosity: 1,
       scrollWheelZoom: true
     }).setView([17, 0], 2);
     mapRef.current = map;
@@ -41,7 +43,7 @@ export function WorldMapPage() {
 
     map.createPane('nightPane');
     map.getPane('nightPane').style.zIndex = 150;
-    L.imageOverlay(earthAtNight, [[-85.05, -180], [85.05, 180]], {
+    L.imageOverlay(earthAtNight, worldBounds, {
       pane: 'nightPane',
       className: 'world-night-image',
       attribution: 'Night imagery: <a href="https://science.nasa.gov/earth/earth-observatory/earth-at-night/maps/">NASA Earth Observatory</a>'
@@ -50,6 +52,7 @@ export function WorldMapPage() {
     // City detail loads only when the listener zooms in; no tiles are prefetched.
     const streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
+      noWrap: true,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     });
     streets.on('tileerror', () => setTileError(true));
