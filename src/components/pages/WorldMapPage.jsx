@@ -15,21 +15,28 @@ const regions = [
 
 export function WorldMapPage() {
   const containerRef = useRef(null);
+  const zoomPanelRef = useRef(null);
   const mapRef = useRef(null);
   const [selected, setSelected] = useState('North America');
   const [tileError, setTileError] = useState(false);
+  const [zoom, setZoom] = useState(2);
+  const [focusPoint, setFocusPoint] = useState(null);
 
   useEffect(() => {
     const map = L.map(containerRef.current, {
       minZoom: 2,
       maxZoom: 19,
       zoomControl: false,
+      doubleClickZoom: false,
       worldCopyJump: true,
       scrollWheelZoom: true
     }).setView([17, 0], 2);
     mapRef.current = map;
+    L.DomEvent.disableClickPropagation(zoomPanelRef.current);
+    L.DomEvent.disableScrollPropagation(zoomPanelRef.current);
 
     L.control.zoom({ position: 'topright' }).addTo(map);
+    L.control.scale({ position: 'bottomleft', metric: true, imperial: true }).addTo(map);
     L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
 
     map.createPane('nightPane');
@@ -58,8 +65,26 @@ export function WorldMapPage() {
       setSelected(region.name);
       map.flyTo(region.center, 5, { duration: 0.7 });
     }))).addTo(map);
+    const focusMarker = L.circleMarker([0, 0], {
+      radius: 7,
+      color: '#fff',
+      weight: 2,
+      fillColor: '#59c7e8',
+      fillOpacity: 1
+    });
+
+    const choosePoint = (event) => {
+      const point = [event.latlng.lat, event.latlng.lng];
+      setFocusPoint(point);
+      focusMarker.setLatLng(event.latlng).addTo(map);
+    };
+    const zoomToPoint = (event) => {
+      choosePoint(event);
+      map.flyTo(event.latlng, Math.max(12, map.getZoom() + 3), { duration: 0.7 });
+    };
 
     const updateLayers = () => {
+      setZoom(map.getZoom());
       if (map.getZoom() >= 4) {
         if (!map.hasLayer(streets)) streets.addTo(map);
       } else if (map.hasLayer(streets)) {
@@ -71,9 +96,13 @@ export function WorldMapPage() {
       } else if (!map.hasLayer(markers)) markers.addTo(map);
     };
     map.on('zoomend', updateLayers);
+    map.on('click', choosePoint);
+    map.on('dblclick', zoomToPoint);
 
     return () => {
       map.off('zoomend', updateLayers);
+      map.off('click', choosePoint);
+      map.off('dblclick', zoomToPoint);
       map.remove();
       mapRef.current = null;
     };
@@ -83,18 +112,29 @@ export function WorldMapPage() {
     setSelected(region.name);
     mapRef.current?.flyTo(region.center, 5, { duration: 0.7 });
   };
+  const scaleLabel = zoom <= 3 ? 'World' : zoom <= 7 ? 'Region' : zoom <= 12 ? 'City' : 'Street';
 
   return (
     <div className="world-map-page">
       <div className="world-map-intro">
         <p className="eyebrow"><Globe2 size={15} /> EXPLORE</p>
         <h1>World Map</h1>
-        <p>Drag to explore. Scroll or pinch to zoom from the night view into cities and streets.</p>
+        <p>Drag to explore, use the scale slider, or double-click a city to zoom straight in.</p>
       </div>
 
       <div className="world-map-card">
         <div className="world-map-canvas">
           <div className="world-map-interactive" ref={containerRef} aria-label="Interactive world map; drag to pan and scroll or pinch to zoom" />
+          <div className="world-map-zoom-panel" ref={zoomPanelRef}>
+            <label htmlFor="world-map-zoom">Map scale</label>
+            <input id="world-map-zoom" type="range" min="2" max="19" step="1" value={zoom}
+              onChange={event => mapRef.current?.setZoom(Number(event.target.value))} />
+            <span>{scaleLabel} · level {zoom}</span>
+            <button type="button" disabled={!focusPoint}
+              onClick={() => mapRef.current?.flyTo(focusPoint, Math.max(13, mapRef.current.getZoom()), { duration: 0.7 })}>
+              {focusPoint ? 'Zoom to selected place' : 'Click a place on the map'}
+            </button>
+          </div>
           {tileError && <p className="world-map-error" role="status">City map tiles are unavailable right now. Try again when connected.</p>}
         </div>
         <div className="world-map-details">
