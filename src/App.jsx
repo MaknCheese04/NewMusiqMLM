@@ -65,7 +65,7 @@ function MainApp({ theme, setTheme }) {
         />
 
         {activePage === 'home' && <HomePage onArtistSelect={openArtist} />}
-        {activePage === 'world-map' && <WorldMapPage />}
+        {activePage === 'world-map' && <WorldMapPage onOpenSearch={() => setActivePage('search')} />}
         {activePage === 'search' && <SearchPage onClose={() => setActivePage('home')} onArtistSelect={openArtist} />}
         {activePage === 'profile' && <ProfilePage onEditProfile={() => setIsEditProfileOpen(true)} onArtistSelect={openArtist} />}
         {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} />}

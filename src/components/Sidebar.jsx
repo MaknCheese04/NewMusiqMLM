@@ -43,13 +43,15 @@ export function Sidebar({ activePage, setActivePage, onOpenStudio }) {
           <span>World Map</span>
         </button>
 
-        <button
-          className={`nav-item ${activePage === 'search' ? 'active' : ''}`}
-          onClick={() => setActivePage('search')}
-        >
-          <Search size={18} />
-          <span>Search</span>
-        </button>
+        {activePage !== 'world-map' && (
+          <button
+            className={`nav-item ${activePage === 'search' ? 'active' : ''}`}
+            onClick={() => setActivePage('search')}
+          >
+            <Search size={18} />
+            <span>Search</span>
+          </button>
+        )}
 
         <button
           className={`nav-item ${activePage === 'library' ? 'active' : ''}`}

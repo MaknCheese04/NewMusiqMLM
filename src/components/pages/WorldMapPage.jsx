@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Globe2 } from 'lucide-react';
+import { Globe2, Search } from 'lucide-react';
 import * as L from '../../vendor/leaflet/leaflet-src.esm.js';
 import '../../vendor/leaflet/leaflet.css';
 import earthAtNight from '../../assets/earth-at-night-mercator.jpg';
@@ -14,7 +14,7 @@ const regions = [
 ];
 const worldBounds = [[-85.05112878, -180], [85.05112878, 180]];
 
-export function WorldMapPage() {
+export function WorldMapPage({ onOpenSearch }) {
   const containerRef = useRef(null);
   const zoomPanelRef = useRef(null);
   const mapRef = useRef(null);
@@ -123,9 +123,17 @@ export function WorldMapPage() {
   return (
     <div className="world-map-page">
       <div className="world-map-intro">
-        <p className="eyebrow"><Globe2 size={15} /> EXPLORE</p>
-        <h1>World Map</h1>
-        <p>Drag to explore, use the scale slider, or double-click a city to zoom straight in.</p>
+        <div className="world-map-intro-row">
+          <div>
+            <p className="eyebrow"><Globe2 size={15} /> EXPLORE</p>
+            <h1>World Map</h1>
+            <p>Drag to explore, use the scale slider, or double-click a city to zoom straight in.</p>
+          </div>
+          <button type="button" className="world-map-search" onClick={onOpenSearch}>
+            <Search size={18} />
+            <span>Search</span>
+          </button>
+        </div>
       </div>
 
       <div className="world-map-card">
