@@ -3,6 +3,7 @@ import { Globe2, Search } from 'lucide-react';
 import * as L from '../../vendor/leaflet/leaflet-src.esm.js';
 import '../../vendor/leaflet/leaflet.css';
 import earthAtNight from '../../assets/earth-at-night-mercator.jpg';
+import { searchArtistOrigins, locateArtistOrigin } from '../../lib/artistOrigins';
 
 const regions = [
   { name: 'North America', center: [39, -98] },
@@ -14,7 +15,13 @@ const regions = [
 ];
 const worldBounds = [[-85.05112878, -180], [85.05112878, 180]];
 
-export function WorldMapPage({ onOpenSearch }) {
+export function WorldMapPage() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searchStatus, setSearchStatus] = useState('');
+  const [searchBusy, setSearchBusy] = useState(false);
+  const searchRequestRef = useRef(0);
+  const artistMarkerRef = useRef(null);
   const containerRef = useRef(null);
   const zoomPanelRef = useRef(null);
   const mapRef = useRef(null);
@@ -25,6 +32,52 @@ export function WorldMapPage({ onOpenSearch }) {
   const [tileError, setTileError] = useState(false);
   const [zoom, setZoom] = useState(2);
   const [focusPoint, setFocusPoint] = useState(null);
+
+  useEffect(() => () => { searchRequestRef.current += 1; }, []);
+
+  const searchArtists = async (event) => {
+    event.preventDefault();
+    if (!query.trim()) return;
+    const request = ++searchRequestRef.current;
+    setSearchBusy(true);
+    setResults([]);
+    artistMarkerRef.current?.remove();
+    setSearchStatus('Searching artists and bands…');
+    try {
+      const matches = await searchArtistOrigins(query);
+      if (request !== searchRequestRef.current) return;
+      setResults(matches);
+      setSearchStatus(matches.length ? 'Choose an artist or band to find their origin on the map.' : 'No artists or bands found. Try another name.');
+    } catch {
+      if (request === searchRequestRef.current) setSearchStatus('Search is unavailable right now. Please try again.');
+    } finally {
+      if (request === searchRequestRef.current) setSearchBusy(false);
+    }
+  };
+
+  const showArtistOrigin = async (artist) => {
+    const request = ++searchRequestRef.current;
+    setSearchBusy(true);
+    setSearchStatus(`Finding ${artist.name}’s origin…`);
+    artistMarkerRef.current?.remove();
+    try {
+      const point = await locateArtistOrigin(artist);
+      if (request !== searchRequestRef.current || !mapRef.current) return;
+      const label = document.createElement('span');
+      label.textContent = `${artist.name} — ${artist.origin.name} (place of origin)`;
+      artistMarkerRef.current = L.circleMarker(point, {
+        radius: 10, color: '#ffffff', weight: 3, fillColor: '#d6a855', fillOpacity: 1,
+        bubblingMouseEvents: false,
+      }).bindTooltip(label, { permanent: true, direction: 'top' }).addTo(mapRef.current);
+      artistMarkerRef.current.on('click', () => setPendingPlace({ name: artist.origin.name, point, zoom: 10 }));
+      mapRef.current.flyTo(point, 10, { duration: 0.7 });
+      setSearchStatus(`${artist.name} — ${artist.origin.name}. Showing their place of origin.`);
+    } catch (error) {
+      if (request === searchRequestRef.current) setSearchStatus(error.message || 'Could not load this origin. Please try again.');
+    } finally {
+      if (request === searchRequestRef.current) setSearchBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (pendingPlace) confirmationRef.current?.showModal();
@@ -161,12 +214,35 @@ export function WorldMapPage({ onOpenSearch }) {
             <h1>World Map</h1>
             <p>Drag to explore, use the scale slider, or double-click a city to zoom straight in.</p>
           </div>
-          <button type="button" className="world-map-search" onClick={onOpenSearch}>
-            <Search size={18} />
-            <span>Search</span>
-          </button>
         </div>
       </div>
+
+      <section className="map-artist-search" aria-label="Find artists on the map">
+        <form className="inline-search" onSubmit={searchArtists} role="search">
+          <Search size={18} aria-hidden="true" />
+          <input type="search" aria-label="Search artists or bands by name" placeholder="Search an artist or band…"
+            value={query} maxLength={120} onChange={event => {
+              setQuery(event.target.value);
+              searchRequestRef.current += 1;
+              setSearchBusy(false);
+              setResults([]);
+              setSearchStatus('');
+              artistMarkerRef.current?.remove();
+            }} />
+          <button type="submit" disabled={searchBusy || !query.trim()}>Search map</button>
+        </form>
+        <p>Find artists and bands by hometown or place of origin.</p>
+        <p role="status">{searchStatus}</p>
+        {results.length > 0 && <ul className="map-artist-results">
+          {results.map(artist => <li key={artist.id}>
+            <button type="button" disabled={searchBusy || !artist.origin} onClick={() => showArtistOrigin(artist)}>
+              <strong>{artist.name}</strong>
+              <span>{[artist.type, artist.description, artist.origin?.name || 'Origin unavailable', artist.country].filter(Boolean).join(' · ')}</span>
+            </button>
+          </li>)}
+        </ul>}
+        <small>Artist origins: <a href="https://musicbrainz.org" target="_blank" rel="noreferrer">MusicBrainz</a> · Map coordinates: <a href="https://www.wikidata.org" target="_blank" rel="noreferrer">Wikidata</a></small>
+      </section>
 
       <div className="world-map-card">
         <div className="world-map-canvas">

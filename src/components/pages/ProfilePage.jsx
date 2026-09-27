@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAudio } from '../../context/AudioContext';
 
@@ -11,7 +12,12 @@ const artists = [
 
 export function ProfilePage({ onEditProfile, onArtistSelect }) {
   const { profile, currentUser } = useAuth();
-  const { savedSongs, playlists } = useAudio();
+  const { savedSongs, playlists, playTrack } = useAudio();
+  const [query, setQuery] = useState('');
+  const normalized = query.trim().toLowerCase();
+  const matchingSongs = savedSongs.filter(song => `${song.title} ${song.artist} ${song.album || ''}`.toLowerCase().includes(normalized));
+  const matchingPlaylists = playlists.filter(playlist => playlist.name.toLowerCase().includes(normalized));
+  const matchingArtists = artists.filter(([name, detail]) => `${name} ${detail}`.toLowerCase().includes(normalized));
 
   const getInitials = (name) => {
     if (!name) return 'AR';
@@ -44,6 +50,28 @@ export function ProfilePage({ onEditProfile, onArtistSelect }) {
         </div>
       </section>
 
+      <section className="profile-section" aria-label="Your Library">
+        <h2>Your Library</h2>
+        <form className="inline-search" role="search" onSubmit={event => event.preventDefault()}>
+          <Search size={18} aria-hidden="true" />
+          <input type="search" aria-label="Search your library" placeholder="Search saved songs, artists, playlists…"
+            value={query} onChange={event => setQuery(event.target.value)} />
+          <button type="submit">Search library</button>
+        </form>
+        <h3>Saved songs</h3>
+        <div className="library-search-results">
+          {matchingSongs.map((song, index) => <button type="button" key={song.song_id ?? song.id ?? index} onClick={() => playTrack(song)}>
+            <strong>{song.title}</strong><span>{song.artist}</span>
+          </button>)}
+          {!matchingSongs.length && <p>{normalized ? 'No saved songs match your search.' : 'No saved songs yet.'}</p>}
+        </div>
+        <h3>Playlists</h3>
+        <div className="library-search-results">
+          {matchingPlaylists.map((playlist, index) => <div key={playlist.id ?? index}>{playlist.name}</div>)}
+          {!matchingPlaylists.length && <p>{normalized ? 'No playlists match your search.' : 'No playlists yet.'}</p>}
+        </div>
+      </section>
+
       <section className="profile-section">
         <div className="section-header">
           <div>
@@ -66,7 +94,7 @@ export function ProfilePage({ onEditProfile, onArtistSelect }) {
           </div>
         </div>
         <div className="artist-grid">
-          {artists.map(([name, detail, avatar, art], idx) => (
+          {matchingArtists.map(([name, detail, avatar, art], idx) => (
             <article key={idx} className="artist-card">
               <button className="artist-avatar" type="button" onClick={() => onArtistSelect(name)} aria-label={`Open ${name}'s artist page`} style={{ background: art }}>
                 {avatar}
@@ -79,6 +107,7 @@ export function ProfilePage({ onEditProfile, onArtistSelect }) {
             </article>
           ))}
         </div>
+        {!matchingArtists.length && <p>No followed artists match your search.</p>}
       </section>
     </div>
   );

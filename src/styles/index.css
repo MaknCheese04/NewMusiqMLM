@@ -1,5 +1,20 @@
 /* NewMusiq React - Core Styling & Design System */
 
+.inline-search { display: flex; align-items: center; gap: 12px; padding: 12px; margin: 14px 0; border: 1px solid var(--color-border); border-radius: 12px; background: var(--bg-card); }
+.inline-search input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--color-text); padding: 8px 0; font-size: 16px; }
+.inline-search button { border-radius: 8px; padding: 10px 14px; background: var(--color-primary); color: white; }
+.inline-search button:disabled, .map-artist-results button:disabled { opacity: .6; cursor: default; }
+.map-artist-search { margin-bottom: 20px; }
+.map-artist-search p, .map-artist-search small { color: var(--color-text-muted); }
+.map-artist-search a { color: var(--color-primary); }
+.map-artist-results { list-style: none; max-height: 220px; overflow-y: auto; margin: 12px 0; }
+.map-artist-results button { width: 100%; text-align: left; padding: 12px; border-bottom: 1px solid var(--color-border); }
+.map-artist-results span, .library-search-results span { display: block; color: var(--color-text-muted); font-size: 13px; }
+.map-artist-results button:hover:not(:disabled), .library-search-results button:hover { background: var(--bg-surface-hover); }
+.library-search-results { display: grid; gap: 8px; margin: 12px 0 20px; }
+.library-search-results button, .library-search-results > div { padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; text-align: left; background: var(--bg-card); }
+@media (max-width: 500px) { .inline-search { flex-wrap: wrap; } .inline-search button { width: 100%; } }
+
 .place-confirmation {
   margin: auto;
   width: min(440px, calc(100% - 32px));

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAudio } from '../context/AudioContext';
-import { Home, Globe2, Search, Library, Music, Plus, Heart, ChevronDown } from 'lucide-react';
+import { Home, Globe2, Library, Music, Plus, Heart, ChevronDown } from 'lucide-react';
 
 export function Sidebar({ activePage, setActivePage, onOpenStudio }) {
   const { currentUser, profile } = useAuth();
@@ -43,18 +43,8 @@ export function Sidebar({ activePage, setActivePage, onOpenStudio }) {
           <span>World Map</span>
         </button>
 
-        {activePage !== 'world-map' && (
-          <button
-            className={`nav-item ${activePage === 'search' ? 'active' : ''}`}
-            onClick={() => setActivePage('search')}
-          >
-            <Search size={18} />
-            <span>Search</span>
-          </button>
-        )}
-
         <button
-          className={`nav-item ${activePage === 'library' ? 'active' : ''}`}
+          className={`nav-item ${activePage === 'profile' ? 'active' : ''}`}
           onClick={() => setActivePage('profile')}
         >
           <Library size={18} />

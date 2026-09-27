@@ -8,7 +8,7 @@ export function Header({ activePage, setActivePage, onOpenSettings, onEditProfil
         <button aria-label="Back" onClick={() => setActivePage('home')}>
           <ChevronLeft size={18} />
         </button>
-        <button aria-label="Forward" onClick={() => setActivePage('search')}>
+        <button aria-label="Open world map" onClick={() => setActivePage('world-map')}>
           <ChevronRight size={18} />
         </button>
       </div>

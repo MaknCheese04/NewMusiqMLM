@@ -7,7 +7,6 @@ import { Header } from './components/Header';
 import { Player } from './components/Player';
 import { HomePage } from './components/pages/HomePage';
 import { WorldMapPage } from './components/pages/WorldMapPage';
-import { SearchPage } from './components/pages/SearchPage';
 import { ProfilePage } from './components/pages/ProfilePage';
 import { SettingsPage } from './components/pages/SettingsPage';
 import { ArtistPage } from './components/pages/ArtistPage';
@@ -65,8 +64,7 @@ function MainApp({ theme, setTheme }) {
         />
 
         {activePage === 'home' && <HomePage onArtistSelect={openArtist} />}
-        {activePage === 'world-map' && <WorldMapPage onOpenSearch={() => setActivePage('search')} />}
-        {activePage === 'search' && <SearchPage onClose={() => setActivePage('home')} onArtistSelect={openArtist} />}
+        {activePage === 'world-map' && <WorldMapPage />}
         {activePage === 'profile' && <ProfilePage onEditProfile={() => setIsEditProfileOpen(true)} onArtistSelect={openArtist} />}
         {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} />}
         {activePage === 'artist' && selectedArtist && <ArtistPage artistName={selectedArtist} onBack={() => setActivePage(previousPage)} />}
