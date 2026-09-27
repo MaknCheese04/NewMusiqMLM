@@ -18,10 +18,18 @@ export function WorldMapPage({ onOpenSearch }) {
   const containerRef = useRef(null);
   const zoomPanelRef = useRef(null);
   const mapRef = useRef(null);
+  const confirmationRef = useRef(null);
+  const focusMarkerRef = useRef(null);
+  const [pendingPlace, setPendingPlace] = useState(null);
   const [selected, setSelected] = useState('North America');
   const [tileError, setTileError] = useState(false);
   const [zoom, setZoom] = useState(2);
   const [focusPoint, setFocusPoint] = useState(null);
+
+  useEffect(() => {
+    if (pendingPlace) confirmationRef.current?.showModal();
+    else confirmationRef.current?.close();
+  }, [pendingPlace]);
 
   useEffect(() => {
     const map = L.map(containerRef.current, {
@@ -65,10 +73,10 @@ export function WorldMapPage({ onOpenSearch }) {
       color: '#fff3c7',
       weight: 2,
       fillColor: '#d6a855',
-      fillOpacity: 0.95
+      fillOpacity: 0.95,
+      bubblingMouseEvents: false
     }).bindTooltip(region.name).on('click', () => {
-      setSelected(region.name);
-      map.flyTo(region.center, 5, { duration: 0.7 });
+      setPendingPlace({ name: region.name, point: region.center, zoom: 5, region: true });
     }))).addTo(map);
     const focusMarker = L.circleMarker([0, 0], {
       radius: 7,
@@ -77,15 +85,21 @@ export function WorldMapPage({ onOpenSearch }) {
       fillColor: '#59c7e8',
       fillOpacity: 1
     });
+    focusMarkerRef.current = focusMarker;
 
+    let selectionTimer;
     const choosePoint = (event) => {
+      clearTimeout(selectionTimer);
       const point = [event.latlng.lat, event.latlng.lng];
-      setFocusPoint(point);
-      focusMarker.setLatLng(event.latlng).addTo(map);
+      selectionTimer = setTimeout(() => {
+        setPendingPlace({ name: `the place at ${point[0].toFixed(4)}, ${point[1].toFixed(4)}`, point });
+      }, 300);
     };
     const zoomToPoint = (event) => {
-      choosePoint(event);
-      map.flyTo(event.latlng, Math.max(12, map.getZoom() + 3), { duration: 0.7 });
+      clearTimeout(selectionTimer);
+      const point = [event.latlng.lat, event.latlng.lng];
+      setPendingPlace({ name: `the place at ${point[0].toFixed(4)}, ${point[1].toFixed(4)}`, point,
+        zoom: Math.min(19, Math.max(12, map.getZoom() + 3)) });
     };
 
     const updateLayers = () => {
@@ -105,23 +119,41 @@ export function WorldMapPage({ onOpenSearch }) {
     map.on('dblclick', zoomToPoint);
 
     return () => {
+      clearTimeout(selectionTimer);
       sizeObserver.disconnect();
       map.off('zoomend', updateLayers);
       map.off('click', choosePoint);
       map.off('dblclick', zoomToPoint);
       map.remove();
       mapRef.current = null;
+      focusMarkerRef.current = null;
     };
   }, []);
 
   const chooseRegion = (region) => {
-    setSelected(region.name);
-    mapRef.current?.flyTo(region.center, 5, { duration: 0.7 });
+    setPendingPlace({ name: region.name, point: region.center, zoom: 5, region: true });
+  };
+  const confirmPlace = () => {
+    if (!pendingPlace || !mapRef.current) return;
+    if (pendingPlace.region) setSelected(pendingPlace.name);
+    setFocusPoint(pendingPlace.point);
+    focusMarkerRef.current?.setLatLng(pendingPlace.point).addTo(mapRef.current);
+    if (pendingPlace.zoom) mapRef.current.flyTo(pendingPlace.point, pendingPlace.zoom, { duration: 0.7 });
+    setPendingPlace(null);
   };
   const scaleLabel = zoom <= 3 ? 'World' : zoom <= 7 ? 'Region' : zoom <= 12 ? 'City' : 'Street';
 
   return (
     <div className="world-map-page">
+      <dialog ref={confirmationRef} className="place-confirmation" aria-labelledby="place-confirmation-title"
+        onCancel={() => setPendingPlace(null)}>
+        <h2 id="place-confirmation-title">Confirm place</h2>
+        <p>Are you sure you want to select {pendingPlace?.name}?</p>
+        <div className="place-confirmation-actions">
+          <button type="button" autoFocus onClick={() => setPendingPlace(null)}>Cancel</button>
+          <button type="button" onClick={confirmPlace}>Yes, select this place</button>
+        </div>
+      </dialog>
       <div className="world-map-intro">
         <div className="world-map-intro-row">
           <div>
