@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { AccountLocationSettings } from '../AccountLocationSettings';
 
 export function SettingsPage({ theme, setTheme }) {
   const { logout } = useAuth();
@@ -53,6 +54,7 @@ export function SettingsPage({ theme, setTheme }) {
           </div>
           <button onClick={logout}>Sign out</button>
         </div>
+        <AccountLocationSettings />
       </section>
     </div>
   );

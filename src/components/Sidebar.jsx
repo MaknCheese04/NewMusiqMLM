@@ -64,6 +64,12 @@ export function Sidebar({ activePage, setActivePage, onOpenStudio }) {
       </nav>
 
       <div className="divider"></div>
+      <button className={`nav-item ${activePage === 'billing' ? 'active' : ''}`} onClick={() => setActivePage('billing')}>
+        <span aria-hidden="true">$</span><span>Subscription</span>
+      </button>
+      <button className={`nav-item ${activePage === 'artist-access' ? 'active' : ''}`} onClick={() => setActivePage('artist-access')}>
+        <Music size={18} /><span>Artist access</span>
+      </button>
 
       <div className="nav-label">YOUR COLLECTION</div>
 

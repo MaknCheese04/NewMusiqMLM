@@ -74,7 +74,7 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const register = async ({ email, password, name, role, artistName }) => {
+  const register = async ({ email, password, name, role, artistName, hometown = '', address = {}, claimArtistId = '', evidence = '' }) => {
     const displayName = name.trim() || email.split('@')[0];
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
@@ -84,7 +84,11 @@ export function AuthProvider({ children }) {
         data: {
           name: displayName,
           role: role || 'listener',
-          artistName: artistName || displayName
+          artistName: artistName.trim() || displayName,
+          hometown: hometown.trim(),
+          mailing_address: address,
+          claim_artist_id: role === 'artist' ? claimArtistId : '',
+          ownership_evidence: role === 'artist' ? evidence.trim() : ''
         }
       }
     });

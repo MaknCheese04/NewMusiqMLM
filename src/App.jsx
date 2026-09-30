@@ -10,6 +10,8 @@ import { WorldMapPage } from './components/pages/WorldMapPage';
 import { ProfilePage } from './components/pages/ProfilePage';
 import { SettingsPage } from './components/pages/SettingsPage';
 import { ArtistPage } from './components/pages/ArtistPage';
+import { ArtistAccessPage } from './components/pages/ArtistAccessPage';
+import { SubscriptionPage } from './components/pages/SubscriptionPage';
 import { ArtistStudioModal } from './components/modals/ArtistStudioModal';
 import { EditProfileModal } from './components/modals/EditProfileModal';
 import './styles/index.css';
@@ -17,7 +19,7 @@ import { safeStorage } from './lib/safeStorage';
 
 function MainApp({ theme, setTheme }) {
   const { session, loading } = useAuth();
-  const [activePage, setActivePage] = useState('home');
+  const [activePage, setActivePage] = useState(() => window.location.hash === '#billing' ? 'billing' : 'home');
   const [selectedArtist, setSelectedArtist] = useState(null);
   const [previousPage, setPreviousPage] = useState('home');
   const [isStudioOpen, setIsStudioOpen] = useState(false);
@@ -67,6 +69,8 @@ function MainApp({ theme, setTheme }) {
         {activePage === 'world-map' && <WorldMapPage />}
         {activePage === 'profile' && <ProfilePage onEditProfile={() => setIsEditProfileOpen(true)} onArtistSelect={openArtist} />}
         {activePage === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} />}
+        {activePage === 'artist-access' && <ArtistAccessPage onArtistSelect={openArtist} />}
+        {activePage === 'billing' && <SubscriptionPage />}
         {activePage === 'artist' && selectedArtist && <ArtistPage artistName={selectedArtist} onBack={() => setActivePage(previousPage)} />}
       </main>
 

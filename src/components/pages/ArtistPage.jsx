@@ -3,6 +3,8 @@ import { ArrowLeft, Play, Star, Disc3, CircleOff } from 'lucide-react';
 import { useAudio } from '../../context/AudioContext';
 import { supabase } from '../../lib/supabase';
 import { getArtistColors, getArtistProfile } from '../../data/artistProfiles';
+import { useAuth } from '../../context/AuthContext';
+import { ArtistPageEditor } from '../modals/ArtistPageEditor';
 
 function ArtistArtwork({ name, colors, variant, imageUrl }) {
   const initials = name.split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase();
@@ -48,6 +50,13 @@ function SongList({ songs, totals, getTrackKey, playTrack, mode }) {
 }
 
 export function ArtistPage({ artistName, onBack }) {
+  const { user } = useAuth();
+  const [design, setDesign] = useState(null);
+  const [canEdit, setCanEdit] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [listeners, setListeners] = useState([]);
+  const [commenters, setCommenters] = useState([]);
+  const [supporterError, setSupporterError] = useState('');
   const {
     supabaseArtists, supabaseSongs, supabaseAlbums, songRatingTotals, songStreamTotals,
     albumRatings, albumRatingTotals, albumRatingSaving, albumRatingError,
@@ -57,12 +66,41 @@ export function ArtistPage({ artistName, onBack }) {
   const [selectedAlbumKey, setSelectedAlbumKey] = useState(null);
   const [showAlbumRating, setShowAlbumRating] = useState(false);
 
-  const artist = supabaseArtists.find(item => item.name.toLowerCase() === artistName.toLowerCase());
+  const [loadedArtist, setLoadedArtist] = useState(null);
+  const artist = supabaseArtists.find(item => item.name.toLowerCase() === artistName.toLowerCase())
+    || (loadedArtist?.name === artistName ? loadedArtist : null);
+  useEffect(() => {
+    let active = true;
+    if (!supabaseArtists.some(item => item.name.toLowerCase() === artistName.toLowerCase())) {
+      supabase.from('artists').select('*').eq('name',artistName).limit(1).maybeSingle().then(({data}) => {if(active)setLoadedArtist(data);});
+    }
+    return () => {active=false;};
+  },[artistName,supabaseArtists]);
   const profile = getArtistProfile(artistName);
-  const colors = getArtistColors(artistName, profile);
-  const tagline = artist?.tagline || profile?.tagline || 'A story told through sound.';
-  const career = artist?.career || profile?.career;
+  const colors = [...getArtistColors(artistName, profile)];
+  if (design?.accent_color) colors[1] = design.accent_color;
+  const tagline = design?.tagline || artist?.tagline || profile?.tagline || 'A story told through sound.';
+  const career = design?.bio || artist?.career || profile?.career;
   const personality = artist?.personality || profile?.personality;
+
+  useEffect(() => {
+    let active = true;
+    setDesign(null); setCanEdit(false); setEditing(false); setListeners([]); setCommenters([]); setSupporterError('');
+    if (!artist?.artist_id) return;
+    const id = artist.artist_id;
+    Promise.all([
+      supabase.from('artist_page_designs').select('*').eq('artist_id',id).maybeSingle(),
+      supabase.from('artist_claims').select('claim_id').eq('artist_id',id).eq('user_id',user.id).eq('identity_status','verified').eq('ownership_status','approved'),
+      supabase.from('artist_supporter_counts').select('user_id,streams,listener_profiles(display_name)').eq('artist_id',id).gt('streams',0).order('streams',{ascending:false}).order('user_id').limit(5),
+      supabase.from('artist_supporter_counts').select('user_id,comments,listener_profiles(display_name)').eq('artist_id',id).gt('comments',0).order('comments',{ascending:false}).order('user_id').limit(5),
+    ]).then(([page,claims,topListeners,topCommenters]) => {
+      if (!active) return;
+      setDesign(page.data); setCanEdit(!claims.error && Boolean(claims.data?.length));
+      setListeners(topListeners.data || []); setCommenters(topCommenters.data || []);
+      if (topListeners.error || topCommenters.error) setSupporterError('Supporter rankings could not load. Please try again.');
+    }).catch(() => { if(active) setSupporterError('Artist details could not load. Please try again.'); });
+    return () => { active = false; };
+  }, [artist?.artist_id,user?.id]);
 
   useEffect(() => {
     setSelectedAlbumKey(null);
@@ -145,17 +183,29 @@ export function ArtistPage({ artistName, onBack }) {
     `linear-gradient(145deg, ${colors[0]}, ${colors[1]} 58%, ${colors[2]})`;
 
   return (
-    <div className="artist-page" style={{ '--artist-dark': colors[0], '--artist-mid': colors[1], '--artist-light': colors[2] }}>
+    <div className={`artist-page artist-layout-${design?.layout || 'classic'}`} style={{ '--artist-dark': colors[0], '--artist-mid': colors[1], '--artist-light': colors[2] }}>
       <button className="artist-back" type="button" onClick={onBack}><ArrowLeft size={16} /> Back to music</button>
+      {canEdit && <button type="button" className="artist-customize" onClick={() => setEditing(true)}>Customize your page</button>}
+      {editing && canEdit && <ArtistPageEditor artist={artist} design={design} onClose={() => setEditing(false)} onSaved={page => {setDesign(page);setEditing(false);}} />}
       <header className="artist-page-hero">
         <p className="eyebrow">ARTIST / NEWMUSIQ</p>
         <h1>{artistName}</h1>
         <p className="artist-tagline">{tagline}</p>
+        {design?.hometown && <p>From {design.hometown}</p>}
+        <h2>Bio</h2>
         <div className="artist-story">
           <p>{career || 'This artist’s career story is coming soon.'}</p>
           <p>{personality || 'More about the person behind the music is coming soon.'}</p>
         </div>
       </header>
+
+      <section className="artist-supporters" aria-label="Artist supporters">
+        {[['Top 5 listeners',listeners,'streams'],['Top 5 commenters',commenters,'comments']].map(([title,rows,count]) => <div key={title}>
+          <h2>{title}</h2><p>All-time activity</p>
+          {rows.length ? <ol>{rows.map(row => <li key={row.user_id}><strong>{row.listener_profiles?.display_name || 'Listener'}</strong> <span>{Number(row[count]).toLocaleString()} {count}</span></li>)}</ol>
+            : <p>{supporterError || 'Rankings will appear as listeners engage with this artist.'}</p>}
+        </div>)}
+      </section>
 
       <section className="artist-feature artist-feature-rated" aria-labelledby="artist-top-rated">
         <div className="artist-feature-copy">
@@ -163,11 +213,11 @@ export function ArtistPage({ artistName, onBack }) {
           <h2 id="artist-top-rated">Top 5 rated songs</h2>
           <SongList songs={ratedSongs} totals={songRatingTotals} getTrackKey={getTrackKey} playTrack={playTrack} mode="rated" />
         </div>
-        <ArtistArtwork name={artistName} colors={colors} variant="portrait" imageUrl={artist?.portrait_url} />
+        <ArtistArtwork name={artistName} colors={colors} variant="portrait" imageUrl={design?.portrait_url || artist?.portrait_url} />
       </section>
 
       <section className="artist-feature artist-feature-streamed" aria-labelledby="artist-top-streamed">
-        <ArtistArtwork name={artistName} colors={colors} variant="studio" imageUrl={artist?.artwork_url} />
+        <ArtistArtwork name={artistName} colors={colors} variant="studio" imageUrl={design?.artwork_url || artist?.artwork_url} />
         <div className="artist-feature-copy">
           <p className="eyebrow">ON REPEAT</p>
           <h2 id="artist-top-streamed">Top 5 most streamed songs</h2>
@@ -177,7 +227,7 @@ export function ArtistPage({ artistName, onBack }) {
 
       <section className="artist-albums" aria-labelledby="artist-albums-heading">
         <p className="eyebrow">THE DISCOGRAPHY</p>
-        <h2 id="artist-albums-heading">Albums</h2>
+        <h2 id="artist-albums-heading">Top albums & full discography</h2>
         <p>Ordered by listener rating, highest first.</p>
         <div className="artist-album-grid">
           {primaryAlbums.length ? primaryAlbums.map(album => {
@@ -209,6 +259,12 @@ export function ArtistPage({ artistName, onBack }) {
           )) : <p>No featured albums listed yet.</p>}
         </div>
       </section>
+      <section className="artist-albums"><h2>All tracks</h2>
+        <SongList songs={songs} totals={songStreamTotals} getTrackKey={getTrackKey} playTrack={playTrack} mode="streamed" />
+      </section>
+      {(design?.extra_sections || []).filter(section => typeof section?.title === 'string' && typeof section?.body === 'string').map((section,index) => (
+        <section className="artist-albums artist-extra-section" key={index}><h2>{section.title}</h2><p>{section.body}</p></section>
+      ))}
       {selectedAlbum && (
         <section className="artist-album-detail" aria-label={`${selectedAlbum.name} tracks`}>
           <div>

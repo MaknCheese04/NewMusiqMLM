@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 export function AuthScreen() {
   const { login, register } = useAuth();
@@ -10,6 +11,20 @@ export function AuthScreen() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [artistName, setArtistName] = useState('');
+  const [hometown, setHometown] = useState('');
+  const [address, setAddress] = useState({ street: '', city: '', region: '', postalCode: '', country: '' });
+  const [claimArtistId, setClaimArtistId] = useState('');
+  const [evidence, setEvidence] = useState('');
+  const [artists, setArtists] = useState([]);
+  const [artistLoadError, setArtistLoadError] = useState(false);
+  useEffect(() => {
+    if (authMode !== 'register' || role !== 'artist') return;
+    let active = true;
+    supabase.from('artists').select('artist_id,name').order('name').then(({ data, error }) => {
+      if (active) { setArtists(data || []); setArtistLoadError(Boolean(error)); }
+    });
+    return () => { active = false; };
+  }, [authMode, role]);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
@@ -22,7 +37,7 @@ export function AuthScreen() {
 
     try {
       if (authMode === 'register') {
-        const res = await register({ email, password, name, role, artistName });
+        const res = await register({ email, password, name, role, artistName, hometown, address, claimArtistId, evidence });
         if (res?.user && !res?.session) {
           setInfoMessage('Account created! Please check your email to confirm your account.');
         }
@@ -80,6 +95,11 @@ export function AuthScreen() {
               </button>
             </div>
           )}
+          {isRegistering && <p className="signup-plan">{role === 'artist'
+            ? 'Artist membership: first 3 months free, then $10 USD/month.'
+            : 'Listener membership: first month free, then $5 USD/month.'}
+            <small> Start your subscription after creating your account. Creating an account does not start a trial or charge you.</small>
+          </p>}
 
           {isRegistering && (
             <label className="auth-label">
@@ -119,9 +139,11 @@ export function AuthScreen() {
           </label>
 
           {isRegistering && role === 'artist' && (
+            <>
             <label className="auth-label">
-              Artist name <small>(optional)</small>
+              Artist or band name
               <input
+                required
                 value={artistName}
                 onChange={(e) => setArtistName(e.target.value)}
                 maxLength={48}
@@ -129,11 +151,44 @@ export function AuthScreen() {
                 disabled={isSubmitting}
               />
             </label>
+            <label className="auth-label">Connect to an artist page
+              <select value={claimArtistId} onChange={event => {
+                setClaimArtistId(event.target.value);
+                const artist = artists.find(item => String(item.artist_id) === event.target.value);
+                if (artist) setArtistName(artist.name);
+              }} disabled={isSubmitting}>
+                <option value="">Request a new artist page</option>
+                {artists.map(artist => <option key={artist.artist_id} value={artist.artist_id}>{artist.name}</option>)}
+              </select>
+            </label>
+            {artistLoadError && <p role="alert">Existing artist pages could not load. Please try again before requesting a new page.</p>}
+            <label className="auth-label">Official website or artist profile
+              <input type="url" required pattern="https://.*" maxLength={1000} value={evidence}
+                onChange={event => setEvidence(event.target.value)} placeholder="https://your-official-artist-page.com" disabled={isSubmitting} />
+            </label>
+            <p className="onboarding-note">After confirming your email, complete ID verification and a page-ownership review in Artist access. Your page becomes editable after both checks pass.</p>
+            {import.meta.env.VITE_ARTIST_IDENTITY_ENABLED !== 'true' && <p className="onboarding-note">ID verification is not active yet. You can create an account and request access now.</p>}
+            </>
           )}
+
+          {isRegistering && <>
+            <label className="auth-label">Public hometown / place of origin <small>(optional)</small>
+              <input value={hometown} onChange={event => setHometown(event.target.value)} maxLength={200}
+                placeholder="City, state or region, country" disabled={isSubmitting} />
+            </label>
+            <details className="private-address"><summary>Add a private mailing address (optional)</summary>
+              <p>This address is private and never appears on your artist page or map.</p>
+              {Object.entries({street:'Street address',city:'City',region:'State / region',postalCode:'Postal code',country:'Country'}).map(([key,label]) => (
+                <label className="auth-label" key={key}>{label}<input value={address[key]} maxLength={200} disabled={isSubmitting}
+                  autoComplete={{street:'street-address',city:'address-level2',region:'address-level1',postalCode:'postal-code',country:'country-name'}[key]}
+                  onChange={event => setAddress(previous => ({...previous,[key]:event.target.value}))} /></label>
+              ))}
+            </details>
+          </>}
 
           <button className="auth-submit" type="submit" disabled={isSubmitting}>
             {isSubmitting
-              ? 'Connecting to Supabase...'
+              ? 'Please wait…'
               : isRegistering
                 ? 'Create account'
                 : 'Sign in'}
