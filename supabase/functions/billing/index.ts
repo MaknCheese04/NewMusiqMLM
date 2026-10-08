@@ -1,6 +1,6 @@
 import {cors,json,signedIn} from '../_shared/artist-access.ts';
 import {billingConfig,stripeClient,ensurePrice,withBillingLock,syncCustomer} from '../_shared/billing.ts';
-import {BILLING_PLANS,trialEndTimestamp} from '../_shared/billing-plans.js';
+import {BILLING_PLANS,trialEndTimestamp,isLiveBillingKey} from '../_shared/billing-plans.js';
 
 Deno.serve(async request => {
   if(request.method==='OPTIONS')return new Response('ok',{headers:cors});
@@ -8,7 +8,13 @@ Deno.serve(async request => {
   try {
     const body=await request.json();
     const config=billingConfig();
-    if(body.action==='config')return json({ready:config.ready});
+    if(body.action==='config')return json({ready:config.ready,checks:{
+      secretKeyPresent:Boolean(config.key),
+      liveSecretKey:isLiveBillingKey(config.key),
+      webhookSecretPresent:Boolean(config.webhook),
+      webhookSecretFormat:config.webhook.startsWith('whsec_'),
+      httpsReturnUrl:config.appUrl.startsWith('https://'),
+    }});
     if(!['refresh','portal','checkout'].includes(body.action) || (body.action==='checkout' && !Object.hasOwn(BILLING_PLANS,body.plan)))return json({error:'Choose a valid billing action and plan.'},400);
     const {user}=await signedIn(request);
     if(!config.ready)return json({error:'Live subscriptions are awaiting billing setup. No payment has been taken.'},503);

@@ -1,16 +1,16 @@
 import Stripe from 'npm:stripe@18.5.0';
 import { admin } from './artist-access.ts';
-import { BILLING_PLANS, matchesPlan } from './billing-plans.js';
+import { BILLING_PLANS, matchesPlan, isLiveBillingKey } from './billing-plans.js';
 
 export function billingConfig() {
-  const key = Deno.env.get('STRIPE_BILLING_SECRET_KEY') || '';
-  const appUrl = Deno.env.get('BILLING_APP_URL') || '';
+  const key = (Deno.env.get('STRIPE_BILLING_SECRET_KEY') || '').trim();
+  const appUrl = Deno.env.get('BILLING_APP_URL') || 'https://newmusiq-gamma.vercel.app';
   const webhook = Deno.env.get('STRIPE_BILLING_WEBHOOK_SECRET') || '';
-  return {key,appUrl,webhook,ready:key.startsWith('sk_live_') && appUrl.startsWith('https://') && Boolean(webhook)};
+  return {key,appUrl,webhook,ready:isLiveBillingKey(key) && appUrl.startsWith('https://') && Boolean(webhook)};
 }
 export function stripeClient() {
   const {key} = billingConfig();
-  if (!key.startsWith('sk_live_')) throw new Error('Live billing is awaiting Stripe configuration.');
+  if (!isLiveBillingKey(key)) throw new Error('Live billing is awaiting Stripe configuration.');
   return new Stripe(key,{timeout:10000,maxNetworkRetries:1});
 }
 export async function ensurePrice(stripe: Stripe, planKey: string) {

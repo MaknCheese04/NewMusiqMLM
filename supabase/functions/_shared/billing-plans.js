@@ -1,3 +1,8 @@
+// Format check only; Stripe validates the credential and its permissions.
+export function isLiveBillingKey(key) {
+  return typeof key === 'string' && /^(sk|rk)_live_.+$/.test(key);
+}
+
 export const BILLING_PLANS = Object.freeze({
   listener: { name: 'Listener', cents: 500, trialMonths: 1, lookup: 'newmusiq_listener_usd_month_v1' },
   artist: { name: 'Artist', cents: 1000, trialMonths: 3, lookup: 'newmusiq_artist_usd_month_v1' },

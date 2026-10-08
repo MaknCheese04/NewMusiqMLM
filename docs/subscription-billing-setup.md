@@ -9,11 +9,11 @@ The trial begins when the checkout session is prepared and ends on the correspon
 
 ## Deployment status
 
-The `billing` and `billing-webhook` functions and billing database migration are deployed to the NewMusiq Supabase project. Live readiness currently returns `false`; real checkout is unavailable until the settings below are supplied. No payment or real subscription has been created during implementation.
+The `billing` and `billing-webhook` functions and billing database migration are deployed to the NewMusiq Supabase project. The deployed configuration check returns `ready: true` as of October 2, 2026. This checks credential formats and required settings only; Stripe permissions, checkout completion, and webhook delivery still require validation. No payment or real subscription has been created during implementation.
 
 ## Activate live payments
 
-1. In [NewMusiq Edge Function secrets](https://supabase.com/dashboard/project/dcoivxvmgoggevpqurcc/functions/secrets), set `STRIPE_BILLING_SECRET_KEY` to the Stripe live secret key and `BILLING_APP_URL` to the application's public HTTPS URL. Never put secret keys in `VITE_` variables or source control.
+1. In [NewMusiq Edge Function secrets](https://supabase.com/dashboard/project/dcoivxvmgoggevpqurcc/functions/secrets), set `STRIPE_BILLING_SECRET_KEY` to a Stripe live secret key (`sk_live_`) or live restricted key (`rk_live_`). Restricted keys need permissions for the operations used here: Customers, Products, Prices, Checkout Sessions, and Customer Portal write access, plus Subscriptions read access. Stripe will report any missing permissions when the corresponding operation runs. The billing return URL defaults to `https://newmusiq-gamma.vercel.app`; set `BILLING_APP_URL` only to override it when the domain changes. Never put secret keys in `VITE_` variables or source control.
 2. In Stripe, add a webhook destination for `https://dcoivxvmgoggevpqurcc.supabase.co/functions/v1/billing-webhook`. Subscribe to `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, and `invoice.payment_failed`.
 3. Save that destination's signing secret in Supabase as `STRIPE_BILLING_WEBHOOK_SECRET`.
 4. Publish the updated frontend through the app's normal hosting workflow. Open Subscription and confirm that both plans can reach Stripe checkout with the advertised USD price and trial end. Do not complete a real charge for testing without explicit authorization.
@@ -34,4 +34,5 @@ The backend creates the exact recurring Stripe Prices on first checkout using st
 
 - `node supabase/tests/billing-plans.test.js`: verifies amounts, calendar months, leap years, and rejection of misconfigured Stripe prices.
 - `supabase/tests/billing_access.sql`: transaction-scoped tests for cross-user isolation, write denial, protected Stripe IDs, and concurrent checkout locks; all fixtures roll back.
-- The frontend production build passes. Real payment completion and provider webhook delivery remain untested until credentials and the public URL are configured.
+- The frontend production build passes. Live restricted-key acceptance is covered by the billing tests. Real payment completion, restricted-key permissions, and provider webhook delivery remain untested.
+

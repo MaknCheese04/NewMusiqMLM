@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BILLING_PLANS,trialEndTimestamp,matchesPlan} from '../functions/_shared/billing-plans.js';
+import {BILLING_PLANS,trialEndTimestamp,matchesPlan,isLiveBillingKey} from '../functions/_shared/billing-plans.js';
+
+test('accepts live restricted and standard keys, rejecting test and unrelated credentials',()=>{
+  for(const key of ['rk_live_example','sk_live_example'])assert.equal(isLiveBillingKey(key),true);
+  for(const key of ['',null,undefined,'rk_live_','sk_live_','rk_test_example','sk_test_example','pk_live_example','whsec_example'])assert.equal(isLiveBillingKey(key),false);
+});
 
 test('advertised USD prices and trial lengths are fixed',()=>{
   assert.equal(BILLING_PLANS.listener.cents,500);
