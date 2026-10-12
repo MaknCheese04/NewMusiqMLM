@@ -52,6 +52,11 @@ export function AuthScreen() {
   };
 
   const isRegistering = authMode === 'register';
+  const switchMode = (mode) => {
+    setAuthMode(mode);
+    setError('');
+    setInfoMessage('');
+  };
 
   return (
     <section className="auth-screen" aria-label="Account access">
@@ -63,6 +68,13 @@ export function AuthScreen() {
             </svg>
           </span>
         </a>
+
+        <div className="auth-mode-switch" role="group" aria-label="Choose account access">
+          <button type="button" aria-pressed={isRegistering} disabled={isSubmitting}
+            onClick={() => switchMode('register')}>New user</button>
+          <button type="button" aria-pressed={!isRegistering} disabled={isSubmitting}
+            onClick={() => switchMode('signin')}>Returning user</button>
+        </div>
 
         <div className="auth-copy">
           <p className="eyebrow">YOUR MUSIC HOME</p>
@@ -130,6 +142,7 @@ export function AuthScreen() {
             Password
             <input
               type="password"
+              autoComplete={isRegistering ? 'new-password' : 'current-password'}
               minLength={6}
               required
               value={password}
@@ -198,11 +211,8 @@ export function AuthScreen() {
             {isRegistering ? 'Already have an account?' : 'New to NewMusiq?'}{' '}
             <button
               type="button"
-              onClick={() => {
-                setAuthMode(isRegistering ? 'signin' : 'register');
-                setError('');
-                setInfoMessage('');
-              }}
+              disabled={isSubmitting}
+              onClick={() => switchMode(isRegistering ? 'signin' : 'register')}
             >
               {isRegistering ? 'Sign in' : 'Create an account'}
             </button>
