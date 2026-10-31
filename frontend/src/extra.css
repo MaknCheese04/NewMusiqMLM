@@ -1195,7 +1195,7 @@ body, .login-page, .player-page, .admin-page { font-size-adjust: 0.6; }
   font-family: "Fraunces", "Souvenir", serif;
   font-weight: 850;
   font-variation-settings: "SOFT" 0, "WONK" 1, "opsz" 144;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.045em;
   line-height: 1.1;
   font-size-adjust: none;
   background: linear-gradient(100deg, #fbf1dc 0%, #f1d595 40%, #e0b25e 70%, #b8812d 100%);
