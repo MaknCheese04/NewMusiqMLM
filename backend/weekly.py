@@ -18,7 +18,7 @@ except ModuleNotFoundError:
 weekly_router = APIRouter(prefix="/api/music")
 _locks: dict = {}
 TOP_N = 15
-MAX_SHARED = 3
+MAX_SHARED = 1
 PROMPT = """You are a music chart researcher. Build the "Top Songs" list for "{region}" for this week ({week}).
 This list must feel unique to {region} - a listener from a neighbouring place should not get the same list.
 Rules for top_songs (25 items, ranked, all real songs that exist):

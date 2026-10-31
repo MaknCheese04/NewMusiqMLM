@@ -90,3 +90,8 @@ User choices: real accounts (sign up / log in), land on the existing home page a
 ## 2026-06 Welcome tour
 - WelcomeTour.jsx (rendered in GlobeHome): 3 spotlight steps (globe .player-content, nav-search, nav-profile). Shows once per account: PUT /me sets tour_pending on first profile completion; Profile.show_tour = tour_pending && paid plan; POST /api/me/tour-done clears it. Existing accounts (no field) never see it.
 - Test: mongosh newmusiq --eval db.profiles.updateOne({username_lower:"alexmorgan"},{$set:{tour_pending:true}}) to replay.
+
+## 2026-06 Unique state lists + font
+- weekly.py: gpt-5.5 with prompt requiring ~2/3 home-grown artists + ~1/3 current local favourites, Wikipedia "Singers/Rappers/Musical groups/Musicians from {state}" names as grounding, user heritage genres as context, avoid list of songs used elsewhere this week; post-filter MAX_SHARED=1, 25 asked -> top 15. Each song has local_tie shown in popup.
+- All 50 US states rebuilt (scripts/rebuild_states.py, add --reset to wipe) + dedupe pass: zero songs shared between states (11-15 songs each).
+- Wordmark font: Pacifico -> Fraunces 850, SOFT 0, WONK 1 (sharp ITC Benguiat Bold lookalike) for .wordmark/.player-wordmark.
