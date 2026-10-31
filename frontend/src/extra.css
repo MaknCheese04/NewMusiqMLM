@@ -1421,5 +1421,5 @@ input[type="range"] { accent-color: #e3b14c; }
 .tour-actions .text-link { margin-right: auto; font-size: 14px; }
 .tour-actions button:not(.text-link) { height: 40px; margin: 0; padding: 0 20px; font-size: 15px; }
 
-.login-page:not(.create-mode) .form-block { margin-top: 30px; }
-@media (max-width: 760px) { .login-page:not(.create-mode) .form-block { margin-top: 22px; } }
+.login-page .form-block { margin-top: 30px; }
+@media (max-width: 760px) { .login-page .form-block { margin-top: 22px; } }
